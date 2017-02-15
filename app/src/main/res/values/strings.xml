@@ -1,4 +1,46 @@
 <resources>
     <string name="app_name">NotifyHSEQ</string>
     <string name="action_settings">Settings</string>
+    <string name="New_notify">New notify</string>
+    <string name="New_notify_data">Data</string>
+    <string name="New_notify_time">Time</string>
+    <string name="Curent_Data">Curent data</string>
+    <string name="Curent_Time">Curent time</string>
+    <string name="New_notify_place">Place</string>
+    <string name="New_notify_Department">Department</string>
+    <string name="New_notify_AcidentType">Accident type</string>
+    <string name="New_notify_Description">Description</string>
+    <string name="Save_Notify">Save data</string>
+    <string name="Send_Notify">Send data</string>
+
+    <string-array name="Place">
+        <item>No choice</item>
+        <item>Office</item>
+        <item>Warehouse</item>
+        <item>Plant</item>
+        <item>Therritory</item>
+        <item>Brache</item>
+        <item>Out our therritory</item>
+        <item>Other</item>
+    </string-array>
+
+    <string-array name="Department">
+        <item>No choice</item>
+        <item>Manufanctirung</item>
+        <item>Logistic</item>
+        <item>Maintenance</item>
+        <item>Legal</item>
+        <item>HR</item>
+        <item>HS</item>
+    </string-array>
+
+    <string-array name="AccidentType">
+        <item>No choice</item>
+        <item>Near Miss</item>
+        <item>Near Loss</item>
+        <item>LTA</item>
+        <item>Near Mess</item>
+    </string-array>
+
+
 </resources>
