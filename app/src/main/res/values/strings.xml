@@ -12,6 +12,7 @@
     <string name="New_notify_Description">Description</string>
     <string name="Save_Notify">Save data</string>
     <string name="Send_Notify">Send data</string>
+    <string name="New_notify_Description_Text">No text</string>
 
     <string-array name="Place">
         <item>No choice</item>

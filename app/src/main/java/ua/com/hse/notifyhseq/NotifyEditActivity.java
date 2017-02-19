@@ -6,9 +6,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Spinner;
 
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 import static ua.com.hse.notifyhseq.R.id.newNotifyAccidentType;
@@ -25,6 +26,9 @@ public class NotifyEditActivity extends AppCompatActivity {
     String mNewNotifyDepartment;
     String mNewNotifyAccidentType;
     String mNewNotifyDescription;
+    String mNotifyFullText;
+    EditText newNotifyEditTextDate, newNotifyEditTextTime, newNotifyEditTextDescription;
+
 
 
     @Override
@@ -32,6 +36,19 @@ public class NotifyEditActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notify_edit);
 
+//** Получение текущей даты и времени из системы
+        Calendar c = Calendar.getInstance();
+        int day = c.get(Calendar.DAY_OF_MONTH);
+        int month = c.get(Calendar.MONTH);
+        int year = c.get(Calendar.YEAR);
+        int hour = c.get(Calendar.HOUR_OF_DAY);
+        int minutes = c.get(Calendar.MINUTE);
+        mNewNotifyDate = day + "." + month + "." + year;
+        mNewNotifyTime = hour + "." + minutes;
+//** Привязка к объектам в отображении
+        newNotifyEditTextDate = (EditText) findViewById(R.id.newNotifyDate);
+        newNotifyEditTextTime = (EditText) findViewById(R.id.newNotifyTime);
+        newNotifyEditTextDescription = (EditText) findViewById(R.id.newNotifyCurentDescription);
 
 //Spinner for place
         final Spinner spinnerPlace = (Spinner) findViewById(newNotifyPlace);
@@ -43,8 +60,7 @@ public class NotifyEditActivity extends AppCompatActivity {
 // Apply the adapter to the spinner
         spinnerPlace.setAdapter(adapterPlace);
 
-
-        //Spinner for department
+//Spinner for department
         final Spinner spinnerDepartment = (Spinner) findViewById(newNotifyDepartment);
         // Create an ArrayAdapter using the string array and a default spinner layout
         ArrayAdapter<CharSequence> adapterDepartment = ArrayAdapter.createFromResource(this,
@@ -54,8 +70,7 @@ public class NotifyEditActivity extends AppCompatActivity {
 // Apply the adapter to the spinner
         spinnerDepartment.setAdapter(adapterDepartment);
 
-
-        //Spinner for Accident type
+//Spinner for Accident type
         final Spinner spinnerAccidentType = (Spinner) findViewById(newNotifyAccidentType);
         // Create an ArrayAdapter using the string array and a default spinner layout
         ArrayAdapter<CharSequence> adapterAccidentType = ArrayAdapter.createFromResource(this,
@@ -73,16 +88,6 @@ public class NotifyEditActivity extends AppCompatActivity {
 
                 //Save info about new Notify
 
-//getting current date
-                Calendar c = Calendar.getInstance();
-                System.out.println("Current time => " + c.getTime());
-                SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy");
-                mNewNotifyCurrentDate = df.format(c.getTime());
-
-
-                mNewNotifyPlace = spinnerPlace.getSelectedItem().toString();
-                mNewNotifyDepartment = spinnerDepartment.getSelectedItem().toString();
-                mNewNotifyAccidentType = spinnerAccidentType.getSelectedItem().toString();
 
 
                 // going back to MainActivity
@@ -98,16 +103,62 @@ public class NotifyEditActivity extends AppCompatActivity {
             public void onClick(View v) {
                 //Send info about new Notify
 
+                //** Получение текущей даты и времени из системы
+                Calendar c = Calendar.getInstance();
+                int day = c.get(Calendar.DAY_OF_MONTH);
+                int month = c.get(Calendar.MONTH);
+                int year = c.get(Calendar.YEAR);
+                int hour = c.get(Calendar.HOUR_OF_DAY);
+                int minutes = c.get(Calendar.MINUTE);
+                mNewNotifyCurrentDate = day + "." + month + "." + year;
+                mNewNotifyCurrentTime = hour + "." + minutes;
+
+//**Получение данных из заполненных полей
+                mNewNotifyDate = newNotifyEditTextDate.getText().toString();
+                mNewNotifyTime = newNotifyEditTextTime.getText().toString();
+                mNewNotifyPlace = spinnerPlace.getSelectedItem().toString();
+                mNewNotifyDepartment = spinnerDepartment.getSelectedItem().toString();
+                mNewNotifyAccidentType = spinnerAccidentType.getSelectedItem().toString();
+                mNewNotifyDescription = newNotifyEditTextDescription.getText().toString();
+
+                mNotifyFullText = "Notify:";
+                mNotifyFullText += "\nDate and Time of record: " + mNewNotifyCurrentDate + " " + mNewNotifyCurrentTime;
+                mNotifyFullText += "\nDate: " + mNewNotifyDate;
+                mNotifyFullText += "\nTime: " + mNewNotifyTime;
+                mNotifyFullText += "\nPlace: " + mNewNotifyPlace;
+                mNotifyFullText += "\nDepartment: " + mNewNotifyDepartment;
+                mNotifyFullText += "\nAccident type: " + mNewNotifyAccidentType;
+                mNotifyFullText += "\nShort information:\n: " + mNewNotifyDescription;
+
+
+//** Посылаем письмо с информацией
                 MailSender mailSender = new MailSender("soldiez111@gmail.com", "soldar111");
 
                 Mail.MailBuilder builder = new Mail.MailBuilder();
                 Mail mail = builder
                         .setSender("soldiez111@gmail.com")
                         .addRecipient(new Recipient("soldiez@yandex.ru"))
-                        .setText("Hello")
+//                        .addRecipient(new Recipient(Recipient.TYPE.CC, recipientCC))
+                        .setSubject("Notify: " + mNewNotifyCurrentTime + " " + mNewNotifyCurrentTime)
+                        .setText(mNotifyFullText)
+//                        .setHtml("<h1 style=\"color:red;\">Hello</h1>")
+//                        .addAttachment(new Attachment(mCurrentPhotoPath, "pic.jpg"))
                         .build();
 
-                mailSender.sendMail(mail);
+                MailSender.OnMailSentListener onMailSentListener = new MailSender.OnMailSentListener() {
+
+                    @Override
+                    public void onSuccess() {
+                        // mail sent!
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        // something bad happened :(
+                    }
+                };
+
+                mailSender.sendMail(mail, onMailSentListener);
 
 
                 // going back to MainActivity
@@ -116,6 +167,17 @@ public class NotifyEditActivity extends AppCompatActivity {
                 NotifyEditActivity.this.startActivity(activityChangeIntent);
             }
         });
+// обработка картинки фото
+        final ImageButton buttonTakePhotoOne = (ImageButton) findViewById(R.id.takePhotoOne);
+        buttonTakePhotoOne.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+
+                //** делаем фото, сохраняем и вставляем в вид
+
+
+            }
+        });
+
 
 
     }
