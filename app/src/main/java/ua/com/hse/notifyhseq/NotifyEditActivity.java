@@ -98,6 +98,17 @@ public class NotifyEditActivity extends AppCompatActivity {
             public void onClick(View v) {
                 //Send info about new Notify
 
+                MailSender mailSender = new MailSender("soldiez111@gmail.com", "soldar111");
+
+                Mail.MailBuilder builder = new Mail.MailBuilder();
+                Mail mail = builder
+                        .setSender("soldiez111@gmail.com")
+                        .addRecipient(new Recipient("soldiez@yandex.ru"))
+                        .setText("Hello")
+                        .build();
+
+                mailSender.sendMail(mail);
+
 
                 // going back to MainActivity
                 Intent activityChangeIntent = new Intent(NotifyEditActivity.this, MainActivity.class);
