@@ -29,6 +29,9 @@ public class NotifyEditActivity extends AppCompatActivity {
     String mNotifyFullText;
     EditText newNotifyEditTextDate, newNotifyEditTextTime, newNotifyEditTextDescription;
 
+    // Для фото переменные
+
+
 
 
     @Override
