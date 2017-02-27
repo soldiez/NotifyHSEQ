@@ -1,4 +1,4 @@
-package ua.com.hse.notifyhseq;
+package ua.com.hse.notifyhseq.mail;
 
 import android.os.AsyncTask;
 import android.util.Log;

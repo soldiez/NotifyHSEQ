@@ -1,16 +1,36 @@
 package ua.com.hse.notifyhseq;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Spinner;
 
+import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+
+import ua.com.hse.notifyhseq.mail.Attachment;
+import ua.com.hse.notifyhseq.mail.Mail;
+import ua.com.hse.notifyhseq.mail.MailSender;
+import ua.com.hse.notifyhseq.mail.Recipient;
 
 import static ua.com.hse.notifyhseq.R.id.newNotifyAccidentType;
 import static ua.com.hse.notifyhseq.R.id.newNotifyDepartment;
@@ -18,6 +38,15 @@ import static ua.com.hse.notifyhseq.R.id.newNotifyPlace;
 
 public class NotifyEditActivity extends AppCompatActivity {
 
+    // Storage Permissions
+    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+    private static String[] PERMISSIONS_STORAGE = {
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
+    final int TYPE_PHOTO = 1;
+    final int REQUEST_CODE_PHOTO = 1;
+    final String TAG = "myLogs";
     String mNewNotifyDate;
     String mNewNotifyTime;
     String mNewNotifyCurrentDate;
@@ -28,16 +57,37 @@ public class NotifyEditActivity extends AppCompatActivity {
     String mNewNotifyDescription;
     String mNotifyFullText;
     EditText newNotifyEditTextDate, newNotifyEditTextTime, newNotifyEditTextDescription;
-
     // Для фото переменные
+    File directory;
+    String mNameFile = "", mNamePath = "";
 
+    /**
+     * Checks if the app has permission to write to device storage
+     * <p>
+     * If the app does not has permission then the user will be prompted to grant permissions
+     */
+    public static void verifyStoragePermissions(Activity activity) {
+        // Check if we have write permission
+        int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
-
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            // We don't have permission so prompt the user
+            ActivityCompat.requestPermissions(
+                    activity,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notify_edit);
+//Проверка необходимых разрешений
+        verifyStoragePermissions(this);
+        //Создание директории (если ее нет)
+        createDirectory();
 
 //** Получение текущей даты и времени из системы
         Calendar c = Calendar.getInstance();
@@ -48,9 +98,37 @@ public class NotifyEditActivity extends AppCompatActivity {
         int minutes = c.get(Calendar.MINUTE);
         mNewNotifyDate = day + "." + month + "." + year;
         mNewNotifyTime = hour + "." + minutes;
-//** Привязка к объектам в отображении
+
+//Date picker
         newNotifyEditTextDate = (EditText) findViewById(R.id.newNotifyDate);
+        final Button mPickDate = (Button) findViewById(R.id.newNotifyDateButton);
+        mPickDate.setOnClickListener(new View.OnClickListener() {
+
+
+            @Override
+            public void onClick(View view) {
+                DialogFragment newFragment = new DatePickerFragment();
+                newFragment.show(getSupportFragmentManager(), "datePicker");
+
+            }
+        });
+
+
+// Time picker
         newNotifyEditTextTime = (EditText) findViewById(R.id.newNotifyTime);
+        final Button mPickTime = (Button) findViewById(R.id.newNotifyTimeButton);
+        mPickTime.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                DialogFragment newFragment = new TimePickerFragment();
+                newFragment.show(getSupportFragmentManager(), "timePicker");
+            }
+        });
+
+
+//** Привязка к объектам в отображении
+
+
         newNotifyEditTextDescription = (EditText) findViewById(R.id.newNotifyCurentDescription);
 
 //Spinner for place
@@ -107,14 +185,11 @@ public class NotifyEditActivity extends AppCompatActivity {
                 //Send info about new Notify
 
                 //** Получение текущей даты и времени из системы
-                Calendar c = Calendar.getInstance();
-                int day = c.get(Calendar.DAY_OF_MONTH);
-                int month = c.get(Calendar.MONTH);
-                int year = c.get(Calendar.YEAR);
-                int hour = c.get(Calendar.HOUR_OF_DAY);
-                int minutes = c.get(Calendar.MINUTE);
-                mNewNotifyCurrentDate = day + "." + month + "." + year;
-                mNewNotifyCurrentTime = hour + "." + minutes;
+
+                DateFormat df1 = new SimpleDateFormat("d MMM yyyy");
+                DateFormat df2 = new SimpleDateFormat("HH:mm");
+                mNewNotifyCurrentDate = df1.format(Calendar.getInstance().getTime());
+                mNewNotifyCurrentTime = df2.format(Calendar.getInstance().getTime());
 
 //**Получение данных из заполненных полей
                 mNewNotifyDate = newNotifyEditTextDate.getText().toString();
@@ -125,7 +200,7 @@ public class NotifyEditActivity extends AppCompatActivity {
                 mNewNotifyDescription = newNotifyEditTextDescription.getText().toString();
 
                 mNotifyFullText = "Notify:";
-                mNotifyFullText += "\nDate and Time of record: " + mNewNotifyCurrentDate + " " + mNewNotifyCurrentTime;
+                mNotifyFullText += "\nRegister: Date: " + mNewNotifyCurrentDate + " Time: " + mNewNotifyCurrentTime;
                 mNotifyFullText += "\nDate: " + mNewNotifyDate;
                 mNotifyFullText += "\nTime: " + mNewNotifyTime;
                 mNotifyFullText += "\nPlace: " + mNewNotifyPlace;
@@ -138,15 +213,31 @@ public class NotifyEditActivity extends AppCompatActivity {
                 MailSender mailSender = new MailSender("soldiez111@gmail.com", "soldar111");
 
                 Mail.MailBuilder builder = new Mail.MailBuilder();
-                Mail mail = builder
-                        .setSender("soldiez111@gmail.com")
-                        .addRecipient(new Recipient("soldiez@yandex.ru"))
+                Mail mail;
+
+                if (mNameFile == "") {
+                    mail = builder
+                            .setSender("soldiez111@gmail.com")
+                            .addRecipient(new Recipient("soldiez@yandex.ru"))
 //                        .addRecipient(new Recipient(Recipient.TYPE.CC, recipientCC))
-                        .setSubject("Notify: " + mNewNotifyCurrentTime + " " + mNewNotifyCurrentTime)
-                        .setText(mNotifyFullText)
-//                        .setHtml("<h1 style=\"color:red;\">Hello</h1>")
-//                        .addAttachment(new Attachment(mCurrentPhotoPath, "pic.jpg"))
-                        .build();
+                            .setSubject("Notify: " + mNewNotifyCurrentTime + " " + mNewNotifyCurrentTime)
+                            .setText(mNotifyFullText)
+//                        .setHtml("<h1 style=\"color:red;\">Hello</h1>");
+                            .build();
+
+                } else {
+                    mail = builder
+                            .setSender("soldiez111@gmail.com")
+                            .addRecipient(new Recipient("soldiez@yandex.ru"))
+//                        .addRecipient(new Recipient(Recipient.TYPE.CC, recipientCC))
+                            .setSubject("Notify: " + mNewNotifyCurrentTime + " " + mNewNotifyCurrentTime)
+                            .setText(mNotifyFullText)
+//                        .setHtml("<h1 style=\"color:red;\">Hello</h1>");
+                            .addAttachment(new Attachment(mNamePath + "/" + mNameFile, mNameFile))
+                            .build();
+                }
+                Log.d(TAG + " Send", mNamePath);
+                Log.d(TAG + " Send", mNameFile);
 
                 MailSender.OnMailSentListener onMailSentListener = new MailSender.OnMailSentListener() {
 
@@ -171,19 +262,91 @@ public class NotifyEditActivity extends AppCompatActivity {
             }
         });
 // обработка картинки фото
-        final ImageButton buttonTakePhotoOne = (ImageButton) findViewById(R.id.takePhotoOne);
+        final ImageView buttonTakePhotoOne = (ImageView) findViewById(R.id.takePhotoOne);
         buttonTakePhotoOne.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
 
                 //** делаем фото, сохраняем и вставляем в вид
-
+                Intent intentPhoto = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                intentPhoto.putExtra(MediaStore.EXTRA_OUTPUT, generateFileUri(TYPE_PHOTO));
+                startActivityForResult(intentPhoto, REQUEST_CODE_PHOTO);
 
             }
         });
 
+    }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent intentPhoto) {
+        if (requestCode == REQUEST_CODE_PHOTO) {
+            if (resultCode == RESULT_OK) {
+                if (intentPhoto == null) {
+                    Log.d(TAG, "Intent is null");
+
+                } else {
+                    Log.d(TAG, "Photo uri: " + intentPhoto.getData());
+                    Bundle bndl = intentPhoto.getExtras();
+                    if (bndl != null) {
+                        Object obj = intentPhoto.getExtras().get("data");
+                        if (obj instanceof Bitmap) {
+                            Bitmap bitmap = (Bitmap) obj;
+                            Log.d(TAG, "bitmap " + bitmap.getWidth() + " x "
+                                    + bitmap.getHeight());
+                        }
+                    }
+                }
+            } else if (resultCode == RESULT_CANCELED) {
+                Log.d(TAG, "Canceled");
+            }
+
+        }
 
     }
+
+    private Uri generateFileUri(int type) {
+        File file = null;
+        mNameFile = "photo_" + System.currentTimeMillis() + ".jpg";
+        mNamePath = directory.getPath();
+        file = new File(mNamePath + "/" + mNameFile);
+
+        Log.d(TAG, "fileName = " + file);
+        return Uri.fromFile(file);
+    }
+
+    private void createDirectory() {
+        directory = new File(
+                Environment
+                        .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+                "MyFolder");
+        if (!directory.exists())
+            directory.mkdirs();
+    }
+
+    //Date picker biblioteks
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+
+// Time picker additionally libs
 
 
 }

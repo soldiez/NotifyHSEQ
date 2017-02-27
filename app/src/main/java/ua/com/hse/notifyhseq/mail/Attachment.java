@@ -1,4 +1,4 @@
-package ua.com.hse.notifyhseq;
+package ua.com.hse.notifyhseq.mail;
 
 /**
  * Copyright (c) 2016 Enrico Candino

@@ -53,9 +53,15 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Intent myIntent = new Intent(MainActivity.this, SettingsActivity.class);
+            //  myIntent.putExtra("key", value); //Optional parameters
+            MainActivity.this.startActivity(myIntent);
+
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
+
+
 }

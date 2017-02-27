@@ -1,4 +1,4 @@
-package ua.com.hse.notifyhseq;
+package ua.com.hse.notifyhseq.mail;
 
 import java.security.AccessController;
 import java.security.Provider;
