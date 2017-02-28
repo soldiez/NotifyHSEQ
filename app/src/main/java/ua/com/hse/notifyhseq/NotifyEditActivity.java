@@ -31,6 +31,8 @@ import ua.com.hse.notifyhseq.mail.Attachment;
 import ua.com.hse.notifyhseq.mail.Mail;
 import ua.com.hse.notifyhseq.mail.MailSender;
 import ua.com.hse.notifyhseq.mail.Recipient;
+import ua.com.hse.notifyhseq.pickers.DatePickerFragment;
+import ua.com.hse.notifyhseq.pickers.TimePickerFragment;
 
 import static ua.com.hse.notifyhseq.R.id.newNotifyAccidentType;
 import static ua.com.hse.notifyhseq.R.id.newNotifyDepartment;

@@ -1,4 +1,4 @@
-package ua.com.hse.notifyhseq;
+package ua.com.hse.notifyhseq.pickers;
 
 import android.app.Dialog;
 import android.app.TimePickerDialog;
@@ -9,6 +9,8 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 
 import java.util.Calendar;
+
+import ua.com.hse.notifyhseq.R;
 
 
 public class TimePickerFragment extends DialogFragment
