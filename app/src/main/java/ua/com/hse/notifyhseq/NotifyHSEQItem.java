@@ -1,11 +1,9 @@
 package ua.com.hse.notifyhseq;
 
-/**
- * Created by UA809722 on 28.02.2017.
- */
 
 public class NotifyHSEQItem {
-    private int id;
+    private int mainNumber;
+    private int sync;
     private String dateRegistration;
     private String timeRegistration;
     private String dateHappened;
@@ -16,12 +14,23 @@ public class NotifyHSEQItem {
     private String description;
     private String photoPath;
     private String photoName;
+    //status of notify (for exaple started, declined, in work etc.)
+    private int status;
+    //data of person who make notify
+    private String namePerson;
+    private String emailPerson;
+    private String phonePerson;
+    private String departmentPerson;
 
     public NotifyHSEQItem() {
     }
 
-    public NotifyHSEQItem(int id, String dateRegistration, String timeRegistration, String dateHappened, String timeHappened, String type, String place, String department, String description, String photoPath, String photoName) {
-        this.id = id;
+    public NotifyHSEQItem(int mainNumber, int sync, String dateRegistration, String timeRegistration,
+                          String dateHappened, String timeHappened, String type, String place,
+                          String department, String description, String photoPath, String photoName,
+                          int status, String namePerson, String emailPerson, String phonePerson, String departmentPerson) {
+        this.mainNumber = mainNumber;
+        this.sync = sync;
         this.dateRegistration = dateRegistration;
         this.timeRegistration = timeRegistration;
         this.dateHappened = dateHappened;
@@ -32,10 +41,19 @@ public class NotifyHSEQItem {
         this.description = description;
         this.photoPath = photoPath;
         this.photoName = photoName;
+        this.status = status;
+        this.namePerson = namePerson;
+        this.emailPerson = emailPerson;
+        this.phonePerson = phonePerson;
+        this.departmentPerson = departmentPerson;
     }
 
-    public int getId() {
-        return id;
+    public int getMainNumber() {
+        return mainNumber;
+    }
+
+    public int getSync() {
+        return sync;
     }
 
     public String getDateRegistration() {
@@ -76,5 +94,25 @@ public class NotifyHSEQItem {
 
     public String getPhotoName() {
         return photoName;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public String getNamePerson() {
+        return namePerson;
+    }
+
+    public String getEmailPerson() {
+        return emailPerson;
+    }
+
+    public String getPhonePerson() {
+        return phonePerson;
+    }
+
+    public String getDepartmentPerson() {
+        return departmentPerson;
     }
 }

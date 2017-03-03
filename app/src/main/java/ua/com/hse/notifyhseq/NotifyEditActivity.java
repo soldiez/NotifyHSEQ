@@ -49,6 +49,7 @@ public class NotifyEditActivity extends AppCompatActivity {
     final int TYPE_PHOTO = 1;
     final int REQUEST_CODE_PHOTO = 1;
     final String TAG = "myLogs";
+    int sync;
     String mNewNotifyDate;
     String mNewNotifyTime;
     String mNewNotifyCurrentDate;
@@ -58,10 +59,20 @@ public class NotifyEditActivity extends AppCompatActivity {
     String mNewNotifyAccidentType;
     String mNewNotifyDescription;
     String mNotifyFullText;
+    int mNotifyStatus = 0;
+    String mNamePerson = "Alex";
+    String mEmailPerson = "soldiez@yandex.ru";
+    String mPhonePerson = "0504223846";
+    String mDepartmentPerson = "Deprt";
+
     EditText newNotifyEditTextDate, newNotifyEditTextTime, newNotifyEditTextDescription;
     // Для фото переменные
     File directory;
     String mNameFile = "", mNamePath = "";
+    // for database
+    DBAdapter adapter;
+    NotifyOpenHelper helper;
+
 
     /**
      * Checks if the app has permission to write to device storage
@@ -90,6 +101,8 @@ public class NotifyEditActivity extends AppCompatActivity {
         verifyStoragePermissions(this);
         //Создание директории (если ее нет)
         createDirectory();
+        // actualise database
+        adapter = new DBAdapter(this);
 
 //** Получение текущей даты и времени из системы
         Calendar c = Calendar.getInstance();
@@ -169,10 +182,28 @@ public class NotifyEditActivity extends AppCompatActivity {
         buttonSaveNotify.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
 
-                //Save info about new Notify
+                //Save info to database new Notify
 
+//** Получение текущей даты и времени из системы
 
+                DateFormat df1 = new SimpleDateFormat("d MMM yyyy");
+                DateFormat df2 = new SimpleDateFormat("HH:mm");
+                mNewNotifyCurrentDate = df1.format(Calendar.getInstance().getTime());
+                mNewNotifyCurrentTime = df2.format(Calendar.getInstance().getTime());
 
+//**Получение данных из заполненных полей
+                mNewNotifyDate = newNotifyEditTextDate.getText().toString();
+                mNewNotifyTime = newNotifyEditTextTime.getText().toString();
+                mNewNotifyAccidentType = spinnerAccidentType.getSelectedItem().toString();
+                mNewNotifyPlace = spinnerPlace.getSelectedItem().toString();
+                mNewNotifyDepartment = spinnerDepartment.getSelectedItem().toString();
+                mNewNotifyDescription = newNotifyEditTextDescription.getText().toString();
+                sync = 0;
+                long val = adapter.insertDetails(sync, mNewNotifyCurrentDate, mNewNotifyCurrentTime, mNewNotifyDate, mNewNotifyTime,
+                        mNewNotifyAccidentType, mNewNotifyPlace, mNewNotifyDepartment, mNewNotifyDescription, mNamePath, mNameFile, mNotifyStatus, mNamePerson, mEmailPerson, mPhonePerson, mDepartmentPerson);
+                // Toast.makeText(getApplicationContext(), Long.toString(val),
+                // 300).show();
+                finish();
                 // going back to MainActivity
                 Intent activityChangeIntent = new Intent(NotifyEditActivity.this, MainActivity.class);
                 // currentContext.startActivity(activityChangeIntent);
