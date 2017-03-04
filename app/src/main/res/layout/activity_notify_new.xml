@@ -9,7 +9,6 @@
     android:fitsSystemWindows="true">
 
 
-
     <android.support.v4.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -42,7 +41,7 @@
                 android:paddingBottom="8dp">
 
                 <Button
-                    android:id="@+id/editNotifyDateButton"
+                    android:id="@+id/newNotifyDateButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/get_date" />
@@ -66,7 +65,7 @@
                 android:paddingBottom="8dp">
 
                 <Button
-                    android:id="@+id/editNotifyTimeButton"
+                    android:id="@+id/newNotifyTimeButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/get_time" />
@@ -95,7 +94,7 @@
                     android:text="@string/New_notify_place" />
 
                 <Spinner
-                    android:id="@+id/editNotifyPlace"
+                    android:id="@+id/newNotifyPlace"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
@@ -115,7 +114,7 @@
                     android:text="@string/New_notify_Department" />
 
                 <Spinner
-                    android:id="@+id/editNotifyDepartment"
+                    android:id="@+id/newNotifyDepartment"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
@@ -135,7 +134,7 @@
                     android:text="@string/New_notify_AcidentType" />
 
                 <Spinner
-                    android:id="@+id/editNotifyAccidentType"
+                    android:id="@+id/newNotifyAccidentType"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
@@ -155,7 +154,7 @@
                     android:text="@string/New_notify_Description" />
 
                 <EditText
-                    android:id="@+id/editNotifyCurentDescription"
+                    android:id="@+id/newNotifyCurentDescription"
                     android:layout_width="match_parent"
                     android:layout_height="50pt"
                     android:gravity="top"
@@ -171,18 +170,18 @@
                 android:orientation="horizontal">
 
                 <Button
-                    android:id="@+id/updateNotifyButton"
+                    android:id="@+id/saveNotifyButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/update_notify" />
+                    android:text="@string/Save_Notify" />
 
                 <Button
-                    android:id="@+id/deleteNotifyButton"
+                    android:id="@+id/sendNotifyButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/Delete_Notify" />
+                    android:text="@string/Send_Notify" />
 
             </LinearLayout>
         </LinearLayout>

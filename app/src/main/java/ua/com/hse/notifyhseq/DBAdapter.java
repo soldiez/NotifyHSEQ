@@ -78,7 +78,11 @@ public class DBAdapter {
                 openHelper_ob.DESCRIPTION,
                 openHelper_ob.PHOTO_PATH,
                 openHelper_ob.PHOTO_NAME,
-                openHelper_ob.STATUS};
+                openHelper_ob.STATUS,
+                openHelper_ob.NAME_PERSON,
+                openHelper_ob.EMAIL_PERSON,
+                openHelper_ob.PHONE_PERSON,
+                openHelper_ob.DEPARTMENT_PERSON};
         opnToWrite();
         Cursor c = database_ob.query(openHelper_ob.TABLE_NAME, cols, null,
                 null, null, null, null);
@@ -100,7 +104,11 @@ public class DBAdapter {
                 openHelper_ob.DESCRIPTION,
                 openHelper_ob.PHOTO_PATH,
                 openHelper_ob.PHOTO_NAME,
-                openHelper_ob.STATUS};
+                openHelper_ob.STATUS,
+                openHelper_ob.NAME_PERSON,
+                openHelper_ob.EMAIL_PERSON,
+                openHelper_ob.PHONE_PERSON,
+                openHelper_ob.DEPARTMENT_PERSON};
         opnToWrite();
         Cursor c = database_ob.query(openHelper_ob.TABLE_NAME, cols,
                 openHelper_ob.KEY_ID + "=" + id, null, null, null, null);
@@ -109,11 +117,12 @@ public class DBAdapter {
 
     }
 
-    public long updateldetail(int rowId, int sync, String dateRegistration, String timeRegistration,
-                              String dateHappened, String timeHappened, String type, String place,
-                              String department, String description, String photoPath, String photoName,
-                              int status, String namePerson, String emailPerson, String phonePerson, String departmentPerson) {
+    public long updateDetail(int rowId, int mainNumber, int sync, String dateRegistration, String timeRegistration,
+                             String dateHappened, String timeHappened, String type, String place,
+                             String department, String description, String photoPath, String photoName,
+                             int status, String namePerson, String emailPerson, String phonePerson, String departmentPerson) {
         ContentValues contentValues = new ContentValues();
+        contentValues.put(openHelper_ob.MAIN_NUMBER, mainNumber);
         contentValues.put(openHelper_ob.SYNC, sync);
         contentValues.put(openHelper_ob.DATE_REGISTRATION, dateRegistration);
         contentValues.put(openHelper_ob.TIME_REGISTRATION, timeRegistration);

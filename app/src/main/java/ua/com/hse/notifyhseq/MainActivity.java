@@ -1,6 +1,9 @@
 package ua.com.hse.notifyhseq;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -25,14 +28,21 @@ public class MainActivity extends AppCompatActivity {
     SQLiteDatabase db_ob;
     ListView nameList;
     Cursor cursor;
+    BroadcastReceiver broadcastReceiver;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(activity_main); //need to change to activity_main
+        setContentView(activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                //               readFromLocaldStorage(); //TODO не понятно что делать если появился сигнал
+            }
+        };
 
 // code for MSQLite
         nameList = (ListView) findViewById(R.id.list);
@@ -59,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
                 // Integer.toString(nameId), 500).show();
                 passdata.putInt("keyid", nameId);
                 Intent passIntent = new Intent(MainActivity.this,
-                        EditActivity.class);
+                        NotifyEditActivity.class);
                 passIntent.putExtras(passdata);
                 startActivity(passIntent);
             }
@@ -76,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
                 // OLD data from example code
                 //  Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                 //          .setAction("Action", null).show();
-                Intent myIntent = new Intent(MainActivity.this, NotifyEditActivity.class); //change to NotifyEditActivity.class
+                Intent myIntent = new Intent(MainActivity.this, NotifyNewActivity.class);
                 //  myIntent.putExtra("key", value); //Optional parameters
                 MainActivity.this.startActivity(myIntent);
             }
@@ -117,5 +127,15 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        registerReceiver(broadcastReceiver, new IntentFilter(NotifyOpenHelper.UI_UPDATE_BROADCAST));
+    }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(broadcastReceiver);
+    }
 }

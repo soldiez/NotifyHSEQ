@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -20,7 +19,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -37,16 +35,24 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
+import ua.com.hse.notifyhseq.mail.Attachment;
+import ua.com.hse.notifyhseq.mail.Mail;
+import ua.com.hse.notifyhseq.mail.MailSender;
+import ua.com.hse.notifyhseq.mail.Recipient;
 import ua.com.hse.notifyhseq.pickers.DatePickerFragment;
 import ua.com.hse.notifyhseq.pickers.TimePickerFragment;
 
-import static ua.com.hse.notifyhseq.R.array.AccidentType;
+import static ua.com.hse.notifyhseq.R.id.newNotifyAccidentType;
+import static ua.com.hse.notifyhseq.R.id.newNotifyDepartment;
+import static ua.com.hse.notifyhseq.R.id.newNotifyPlace;
 
-public class NotifyEditActivity extends AppCompatActivity {
-
+public class NotifyNewActivity extends AppCompatActivity {
 
     // Storage Permissions
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
@@ -57,16 +63,15 @@ public class NotifyEditActivity extends AppCompatActivity {
     final int TYPE_PHOTO = 1;
     final int REQUEST_CODE_PHOTO = 1;
     final String TAG = "myLogs";
-    int mainNumder;
     int sync;
-    String mEditNotifyDate;
-    String mEditNotifyTime;
-    String mEditNotifyCurrentDate;
-    String mEditNotifyCurrentTime;
-    String mEditNotifyPlace;
-    String mEditNotifyDepartment;
-    String mEditNotifyAccidentType;
-    String mEditNotifyDescription;
+    String mNewNotifyDate;
+    String mNewNotifyTime;
+    String mNewNotifyCurrentDate;
+    String mNewNotifyCurrentTime;
+    String mNewNotifyPlace;
+    String mNewNotifyDepartment;
+    String mNewNotifyAccidentType;
+    String mNewNotifyDescription;
     String mNotifyFullText;
     int mNotifyStatus = 0;
     String mNamePerson = "Alex";
@@ -74,19 +79,14 @@ public class NotifyEditActivity extends AppCompatActivity {
     String mPhonePerson = "0504223846";
     String mDepartmentPerson = "Deprt";
 
-    EditText editNotifyEditTextDate, editNotifyEditTextTime, editNotifyEditTextDescription;
+    EditText newNotifyEditTextDate, newNotifyEditTextTime, newNotifyEditTextDescription;
     // Для фото переменные
     File directory;
-    String mNameFile, mNamePath;
+    String mNameFile = "", mNamePath = "";
     // for database
     DBAdapter adapter;
-    NotifyOpenHelper notifyOpenHelper;
+    NotifyOpenHelper helper;
 
-
-    //    NotifyOpenHelper openHelper;
-    int rowId;
-    Cursor c;
-    Button deleteButton;
 
     /**
      * Checks if the app has permission to write to device storage
@@ -107,20 +107,30 @@ public class NotifyEditActivity extends AppCompatActivity {
         }
     }
 
-
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_notify_edit);
+        setContentView(R.layout.activity_notify_new);
+//Проверка необходимых разрешений
         verifyStoragePermissions(this);
         //Создание директории (если ее нет)
         createDirectory();
         // actualise database
-        adapter = new DBAdapter(this); //?
+        adapter = new DBAdapter(this);
 
+//** Получение текущей даты и времени из системы
+        Calendar c = Calendar.getInstance();
+        int day = c.get(Calendar.DAY_OF_MONTH);
+        int month = c.get(Calendar.MONTH);
+        int year = c.get(Calendar.YEAR);
+        int hour = c.get(Calendar.HOUR_OF_DAY);
+        int minutes = c.get(Calendar.MINUTE);
+        mNewNotifyDate = day + "." + month + "." + year;
+        mNewNotifyTime = hour + "." + minutes;
 
 //Date picker
-        editNotifyEditTextDate = (EditText) findViewById(R.id.newNotifyDate);
-        final Button mPickDate = (Button) findViewById(R.id.editNotifyDateButton);
+        newNotifyEditTextDate = (EditText) findViewById(R.id.newNotifyDate);
+        final Button mPickDate = (Button) findViewById(R.id.newNotifyDateButton);
         mPickDate.setOnClickListener(new View.OnClickListener() {
 
 
@@ -134,8 +144,8 @@ public class NotifyEditActivity extends AppCompatActivity {
 
 
 // Time picker
-        editNotifyEditTextTime = (EditText) findViewById(R.id.newNotifyTime);
-        final Button mPickTime = (Button) findViewById(R.id.editNotifyTimeButton);
+        newNotifyEditTextTime = (EditText) findViewById(R.id.newNotifyTime);
+        final Button mPickTime = (Button) findViewById(R.id.newNotifyTimeButton);
         mPickTime.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -145,24 +155,23 @@ public class NotifyEditActivity extends AppCompatActivity {
         });
 
 
-
 //** Привязка к объектам в отображении
-        editNotifyEditTextDescription = (EditText) findViewById(R.id.editNotifyCurentDescription);
+
+
+        newNotifyEditTextDescription = (EditText) findViewById(R.id.newNotifyCurentDescription);
 
 //Spinner for place
-        final Spinner spinnerPlace = (Spinner) findViewById(R.id.editNotifyPlace);
+        final Spinner spinnerPlace = (Spinner) findViewById(newNotifyPlace);
         // Create an ArrayAdapter using the string array and a default spinner layout
         ArrayAdapter<CharSequence> adapterPlace = ArrayAdapter.createFromResource(this,
                 R.array.Place, android.R.layout.simple_spinner_item);
 // Specify the layout to use when the list of choices appears
         adapterPlace.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-
 // Apply the adapter to the spinner
         spinnerPlace.setAdapter(adapterPlace);
 
 //Spinner for department
-        final Spinner spinnerDepartment = (Spinner) findViewById(R.id.editNotifyDepartment);
+        final Spinner spinnerDepartment = (Spinner) findViewById(newNotifyDepartment);
         // Create an ArrayAdapter using the string array and a default spinner layout
         ArrayAdapter<CharSequence> adapterDepartment = ArrayAdapter.createFromResource(this,
                 R.array.Department, android.R.layout.simple_spinner_item);
@@ -172,16 +181,132 @@ public class NotifyEditActivity extends AppCompatActivity {
         spinnerDepartment.setAdapter(adapterDepartment);
 
 //Spinner for Accident type
-        final Spinner spinnerAccidentType = (Spinner) findViewById(R.id.editNotifyAccidentType);
+        final Spinner spinnerAccidentType = (Spinner) findViewById(newNotifyAccidentType);
         // Create an ArrayAdapter using the string array and a default spinner layout
         ArrayAdapter<CharSequence> adapterAccidentType = ArrayAdapter.createFromResource(this,
-                AccidentType, android.R.layout.simple_spinner_item);
+                R.array.AccidentType, android.R.layout.simple_spinner_item);
 // Specify the layout to use when the list of choices appears
         adapterAccidentType.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 // Apply the adapter to the spinner
         spinnerAccidentType.setAdapter(adapterAccidentType);
 
 
+//Save button - listener
+        final Button buttonSaveNotify = (Button) findViewById(R.id.saveNotifyButton);
+        buttonSaveNotify.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+
+                //Save info to database new Notify
+
+//** Получение текущей даты и времени из системы
+
+                DateFormat df1 = new SimpleDateFormat("d MMM yyyy");
+                DateFormat df2 = new SimpleDateFormat("HH:mm");
+                mNewNotifyCurrentDate = df1.format(Calendar.getInstance().getTime());
+                mNewNotifyCurrentTime = df2.format(Calendar.getInstance().getTime());
+
+//**Получение данных из заполненных полей
+                mNewNotifyDate = newNotifyEditTextDate.getText().toString();
+                mNewNotifyTime = newNotifyEditTextTime.getText().toString();
+                mNewNotifyAccidentType = spinnerAccidentType.getSelectedItem().toString();
+                mNewNotifyPlace = spinnerPlace.getSelectedItem().toString();
+                mNewNotifyDepartment = spinnerDepartment.getSelectedItem().toString();
+                mNewNotifyDescription = newNotifyEditTextDescription.getText().toString();
+                sync = 0;
+
+                saveToAppServer();
+
+                // going back to MainActivity
+                Intent activityChangeIntent = new Intent(NotifyNewActivity.this, MainActivity.class);
+                // currentContext.startActivity(activityChangeIntent);
+                NotifyNewActivity.this.startActivity(activityChangeIntent);
+            }
+        });
+
+//Send button - listener
+        final Button buttonSendNotify = (Button) findViewById(R.id.sendNotifyButton);
+        buttonSendNotify.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                //Send info about new Notify
+
+                //** Получение текущей даты и времени из системы
+
+                DateFormat df1 = new SimpleDateFormat("d MMM yyyy");
+                DateFormat df2 = new SimpleDateFormat("HH:mm");
+                mNewNotifyCurrentDate = df1.format(Calendar.getInstance().getTime());
+                mNewNotifyCurrentTime = df2.format(Calendar.getInstance().getTime());
+
+//**Получение данных из заполненных полей
+                mNewNotifyDate = newNotifyEditTextDate.getText().toString();
+                mNewNotifyTime = newNotifyEditTextTime.getText().toString();
+                mNewNotifyPlace = spinnerPlace.getSelectedItem().toString();
+                mNewNotifyDepartment = spinnerDepartment.getSelectedItem().toString();
+                mNewNotifyAccidentType = spinnerAccidentType.getSelectedItem().toString();
+                mNewNotifyDescription = newNotifyEditTextDescription.getText().toString();
+
+                mNotifyFullText = "Notify:";
+                mNotifyFullText += "\nRegister: Date: " + mNewNotifyCurrentDate + " Time: " + mNewNotifyCurrentTime;
+                mNotifyFullText += "\nDate: " + mNewNotifyDate;
+                mNotifyFullText += "\nTime: " + mNewNotifyTime;
+                mNotifyFullText += "\nPlace: " + mNewNotifyPlace;
+                mNotifyFullText += "\nDepartment: " + mNewNotifyDepartment;
+                mNotifyFullText += "\nAccident type: " + mNewNotifyAccidentType;
+                mNotifyFullText += "\nShort information:\n: " + mNewNotifyDescription;
+
+
+//** Посылаем письмо с информацией
+                MailSender mailSender = new MailSender("soldiez111@gmail.com", "soldar111");
+
+                Mail.MailBuilder builder = new Mail.MailBuilder();
+                Mail mail;
+
+                if (mNameFile == "") {
+                    mail = builder
+                            .setSender("soldiez111@gmail.com")
+                            .addRecipient(new Recipient("soldiez@yandex.ru"))
+//                        .addRecipient(new Recipient(Recipient.TYPE.CC, recipientCC))
+                            .setSubject("Notify: " + mNewNotifyCurrentTime + " " + mNewNotifyCurrentTime)
+                            .setText(mNotifyFullText)
+//                        .setHtml("<h1 style=\"color:red;\">Hello</h1>");
+                            .build();
+
+                } else {
+                    mail = builder
+                            .setSender("soldiez111@gmail.com")
+                            .addRecipient(new Recipient("soldiez@yandex.ru"))
+//                        .addRecipient(new Recipient(Recipient.TYPE.CC, recipientCC))
+                            .setSubject("Notify: " + mNewNotifyCurrentTime + " " + mNewNotifyCurrentTime)
+                            .setText(mNotifyFullText)
+//                        .setHtml("<h1 style=\"color:red;\">Hello</h1>");
+                            .addAttachment(new Attachment(mNamePath + "/" + mNameFile, mNameFile))
+                            .build();
+                }
+                Log.d(TAG + " Send", mNamePath);
+                Log.d(TAG + " Send", mNameFile);
+
+                MailSender.OnMailSentListener onMailSentListener = new MailSender.OnMailSentListener() {
+
+                    @Override
+                    public void onSuccess() {
+                        // mail sent!
+
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        // something bad happened :(
+                    }
+                };
+
+                mailSender.sendMail(mail, onMailSentListener);
+
+
+                // going back to MainActivity
+                Intent activityChangeIntent = new Intent(NotifyNewActivity.this, MainActivity.class);
+                // currentContext.startActivity(activityChangeIntent);
+                NotifyNewActivity.this.startActivity(activityChangeIntent);
+            }
+        });
 // обработка картинки фото
         final ImageView buttonTakePhotoOne = (ImageView) findViewById(R.id.takePhotoOne);
         buttonTakePhotoOne.setOnClickListener(new View.OnClickListener() {
@@ -195,102 +320,7 @@ public class NotifyEditActivity extends AppCompatActivity {
             }
         });
 
-//загрузка данных из вызванной ячейки
-
-        Bundle showData = getIntent().getExtras();
-        rowId = showData.getInt("keyid");
-        // Toast.makeText(getApplicationContext(), Integer.toString(rowId),
-        // 500).show();
-        adapter = new DBAdapter(this);
-
-        c = adapter.queryAll(rowId);
-
-        if (c.moveToFirst()) {
-            do {
-                mainNumder = Integer.parseInt(c.getString(0));
-                sync = Integer.parseInt(c.getString(1));
-                mEditNotifyCurrentDate = c.getString(2);
-                mEditNotifyCurrentTime = c.getString(3);
-
-                mEditNotifyDate = c.getString(4);
-                editNotifyEditTextDate.setText(mEditNotifyDate);
-                mEditNotifyTime = c.getString(5);
-                editNotifyEditTextTime.setText(mEditNotifyTime);
-                mEditNotifyAccidentType = c.getString(6);
-                spinnerAccidentType.setSelection(getIndex(spinnerAccidentType, mEditNotifyAccidentType));
-                mEditNotifyPlace = c.getString(7);
-                spinnerPlace.setSelection(getIndex(spinnerPlace, mEditNotifyPlace));
-                mEditNotifyDepartment = c.getString(8);
-                spinnerDepartment.setSelection(getIndex(spinnerDepartment, mEditNotifyDepartment));
-                mEditNotifyDescription = c.getString(9);
-                editNotifyEditTextDescription.setText(mEditNotifyDescription);
-
-                mNamePath = c.getString(10);
-                mNameFile = c.getString(11);
-                mNotifyStatus = Integer.parseInt(c.getString(12));
-                mNamePerson = c.getString(13);
-                mEmailPerson = c.getString(14);
-                mPhonePerson = c.getString(15);
-                mDepartmentPerson = c.getString(16);
-
-            } while (c.moveToNext());
-        }
-
-//update button - listener
-        final Button buttonUpdateNotify = (Button) findViewById(R.id.updateNotifyButton);
-        buttonUpdateNotify.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-
-                //update info to database Notify
-
-//**Получение данных из заполненных полей
-                mEditNotifyDate = editNotifyEditTextDate.getText().toString();
-                mEditNotifyTime = editNotifyEditTextTime.getText().toString();
-                mEditNotifyAccidentType = spinnerAccidentType.getSelectedItem().toString();
-                mEditNotifyPlace = spinnerPlace.getSelectedItem().toString();
-                mEditNotifyDepartment = spinnerDepartment.getSelectedItem().toString();
-                mEditNotifyDescription = editNotifyEditTextDescription.getText().toString();
-                sync = 0;
-
-                updateToAppServer();//TODO must to save moore right save of data (only for changed fields
-
-                finish();
-                // going back to MainActivity
-                Intent activityChangeIntent = new Intent(NotifyEditActivity.this, MainActivity.class);
-                // currentContext.startActivity(activityChangeIntent);
-                NotifyEditActivity.this.startActivity(activityChangeIntent);
-            }
-        });
-
-        deleteButton = (Button) findViewById(R.id.deleteNotifyButton);
-        deleteButton.setOnClickListener(new OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                // TODO Are you sure window?
-                adapter.deletOneRecord(rowId);
-                finish();
-            }
-        });
-
     }
-
-
-    //get place for text in spinner
-    private int getIndex(Spinner spinner, String myString) {
-        int index = 0;
-
-        for (int i = 0; i < spinner.getCount(); i++) {
-            if (spinner.getItemAtPosition(i).toString().equalsIgnoreCase(myString)) {
-                index = i;
-                break;
-            }
-        }
-        return index;
-    }
-
-
-// work with photo
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intentPhoto) {
@@ -363,10 +393,10 @@ public class NotifyEditActivity extends AppCompatActivity {
 
 //data from syncitem example program
 
-    private void updateToAppServer() {
+    private void saveToAppServer() {
 
         if (checkNetworkConnection()) {
-            StringRequest stringRequest = new StringRequest(Request.Method.POST, NotifyOpenHelper.SERVER_URL, //TODO I am not sur about correct put to server
+            StringRequest stringRequest = new StringRequest(Request.Method.POST, NotifyOpenHelper.SERVER_URL,
                     new Response.Listener<String>() {
                         @Override
                         public void onResponse(String response) {
@@ -376,9 +406,9 @@ public class NotifyEditActivity extends AppCompatActivity {
                                 if (Response.equals("OK")) {
 
                                     sync = NotifyOpenHelper.SYNC_STATUS_OK;
-                                    updateToLocalStorage();
+                                    saveToLocalStorage();
                                 } else {
-                                    updateToLocalStorage();
+                                    saveToLocalStorage();
                                 }
                             } catch (JSONException e) {
                                 e.printStackTrace();
@@ -388,7 +418,7 @@ public class NotifyEditActivity extends AppCompatActivity {
                 @Override
                 public void onErrorResponse(VolleyError error) {
 
-                    updateToLocalStorage();
+                    saveToLocalStorage();
                 }
             }) {
                 @Override
@@ -400,7 +430,7 @@ public class NotifyEditActivity extends AppCompatActivity {
             };
             MySingleton.getInstance(this).addToRequestQue(stringRequest);
         } else {
-            updateToLocalStorage();
+            saveToLocalStorage();
         }
 
     }
@@ -411,13 +441,12 @@ public class NotifyEditActivity extends AppCompatActivity {
         return (networkInfo != null && networkInfo.isConnected());
     }
 
-    private void updateToLocalStorage() {
-        long val = adapter.updateDetail(rowId, mainNumder, sync, mEditNotifyCurrentDate, mEditNotifyCurrentTime,
-                mEditNotifyDate, mEditNotifyTime, mEditNotifyAccidentType, mEditNotifyPlace,
-                mEditNotifyDepartment, mEditNotifyDescription, mNamePath, mNameFile, mNotifyStatus,
-                mNamePerson, mEmailPerson, mPhonePerson, mDepartmentPerson);
+    private void saveToLocalStorage() {
+        long val = adapter.insertDetails(sync, mNewNotifyCurrentDate, mNewNotifyCurrentTime, mNewNotifyDate, mNewNotifyTime,
+                mNewNotifyAccidentType, mNewNotifyPlace, mNewNotifyDepartment, mNewNotifyDescription, mNamePath, mNameFile, mNotifyStatus, mNamePerson, mEmailPerson, mPhonePerson, mDepartmentPerson);
         // Toast.makeText(getApplicationContext(), Long.toString(val),
         // 300).show();
+
     }
 
 }
