@@ -15,7 +15,7 @@ public class NotifyOpenHelper extends SQLiteOpenHelper {
     //data for app server
     public static final int SYNC_STATUS_OK = 0;
     public static final int SYNC_STATUS_FAILED = 1;
-    public static final String SERVER_URL = "http://hsebase.hse.com.ua/syncinfo.php";
+    public static final String SERVER_URL = "http://hsebase.hse.com.ua/ws/ws.php";
     public static final String UI_UPDATE_BROADCAST = "ua.com.hse.synctest.uiupdatebroadcast";
 
 

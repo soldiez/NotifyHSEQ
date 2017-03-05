@@ -31,14 +31,14 @@ import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.StringRequest;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.UnsupportedEncodingException;
 
 import ua.com.hse.notifyhseq.pickers.DatePickerFragment;
 import ua.com.hse.notifyhseq.pickers.TimePickerFragment;
@@ -87,6 +87,7 @@ public class NotifyEditActivity extends AppCompatActivity {
     int rowId;
     Cursor c;
     Button deleteButton;
+    String requestBody;
 
     /**
      * Checks if the app has permission to write to device storage
@@ -106,7 +107,6 @@ public class NotifyEditActivity extends AppCompatActivity {
             );
         }
     }
-
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -252,6 +252,7 @@ public class NotifyEditActivity extends AppCompatActivity {
                 mEditNotifyDescription = editNotifyEditTextDescription.getText().toString();
                 sync = 0;
 
+                updateToLocalStorage();
                 updateToAppServer();//TODO must to save moore right save of data (only for changed fields
 
                 finish();
@@ -268,13 +269,79 @@ public class NotifyEditActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // TODO Are you sure window?
+
                 adapter.deletOneRecord(rowId);
+
+//delete from app server
+                if (checkNetworkConnection()) {
+
+                    JSONObject jsonObject = new JSONObject();
+                    try {
+                        jsonObject.put("mainNumber", mainNumder);
+                        jsonObject.put("sync", sync);
+                        jsonObject.put("dateRegistration", mEditNotifyCurrentDate);
+                        jsonObject.put("timeRegistration", mEditNotifyCurrentTime);
+                        jsonObject.put("dateHappened", mEditNotifyDate);
+                        jsonObject.put("timeHappened", mEditNotifyTime);
+                        jsonObject.put("type", mEditNotifyAccidentType);
+                        jsonObject.put("place", mEditNotifyPlace);
+                        jsonObject.put("department", mEditNotifyDepartment);
+                        jsonObject.put("description", mEditNotifyDescription);
+                        jsonObject.put("photoPath", mNamePath);
+                        jsonObject.put("photoName", mNameFile);
+                        jsonObject.put("status", mNotifyStatus);
+                        jsonObject.put("namePerson", mNamePerson);
+                        jsonObject.put("emailPerson", mEmailPerson);
+                        jsonObject.put("phonePerson", mPhonePerson);
+                        jsonObject.put("departmentPerson", mDepartmentPerson);
+                        Log.d(TAG + " URL:", jsonObject.toString());
+                        requestBody = jsonObject.toString();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    StringRequest stringRequest = new StringRequest(Request.Method.DELETE, NotifyOpenHelper.SERVER_URL, new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+                            Log.d(TAG + " Response:", response);
+                        }
+                    }, new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            Log.d(TAG + " Error:", error.toString());
+                        }
+                    }) {
+                        @Override
+                        public String getBodyContentType() {
+                            return String.format("application/json; charset=utf-8");
+                        }
+
+                        @Override
+                        public byte[] getBody() throws AuthFailureError {
+                            try {
+                                return requestBody == null ? null : requestBody.getBytes("utf-8");
+                            } catch (UnsupportedEncodingException uee) {
+                                VolleyLog.wtf(TAG + " Unsupported Encoding while trying to get the bytes of %s using %s",
+                                        requestBody, "utf-8");
+                                return null;
+                            }
+                        }
+                    };
+                    MySingleton.getInstance(NotifyEditActivity.this).addToRequestQue(stringRequest);
+
+                }
+
                 finish();
+                // going back to MainActivity
+                Intent activityChangeIntent = new Intent(NotifyEditActivity.this, MainActivity.class);
+                // currentContext.startActivity(activityChangeIntent);
+                NotifyEditActivity.this.startActivity(activityChangeIntent);
             }
         });
 
     }
 
+
+// work with photo
 
     //get place for text in spinner
     private int getIndex(Spinner spinner, String myString) {
@@ -288,9 +355,6 @@ public class NotifyEditActivity extends AppCompatActivity {
         }
         return index;
     }
-
-
-// work with photo
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intentPhoto) {
@@ -346,6 +410,8 @@ public class NotifyEditActivity extends AppCompatActivity {
         return true;
     }
 
+//data from syncitem example program
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -361,49 +427,66 @@ public class NotifyEditActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-//data from syncitem example program
-
     private void updateToAppServer() {
 
         if (checkNetworkConnection()) {
-            StringRequest stringRequest = new StringRequest(Request.Method.POST, NotifyOpenHelper.SERVER_URL, //TODO I am not sur about correct put to server
-                    new Response.Listener<String>() {
-                        @Override
-                        public void onResponse(String response) {
-                            try {
-                                JSONObject jsonObject = new JSONObject(response);
-                                String Response = jsonObject.getString("response");
-                                if (Response.equals("OK")) {
 
-                                    sync = NotifyOpenHelper.SYNC_STATUS_OK;
-                                    updateToLocalStorage();
-                                } else {
-                                    updateToLocalStorage();
-                                }
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }, new Response.ErrorListener() {
+            JSONObject jsonObject = new JSONObject();
+            try {
+                jsonObject.put("mainNumber", mainNumder);
+                jsonObject.put("sync", sync);
+                jsonObject.put("dateRegistration", mEditNotifyCurrentDate);
+                jsonObject.put("timeRegistration", mEditNotifyCurrentTime);
+                jsonObject.put("dateHappened", mEditNotifyDate);
+                jsonObject.put("timeHappened", mEditNotifyTime);
+                jsonObject.put("type", mEditNotifyAccidentType);
+                jsonObject.put("place", mEditNotifyPlace);
+                jsonObject.put("department", mEditNotifyDepartment);
+                jsonObject.put("description", mEditNotifyDescription);
+                jsonObject.put("photoPath", mNamePath);
+                jsonObject.put("photoName", mNameFile);
+                jsonObject.put("status", mNotifyStatus);
+                jsonObject.put("namePerson", mNamePerson);
+                jsonObject.put("emailPerson", mEmailPerson);
+                jsonObject.put("phonePerson", mPhonePerson);
+                jsonObject.put("departmentPerson", mDepartmentPerson);
+                Log.d(TAG + " URL:", jsonObject.toString());
+                requestBody = jsonObject.toString();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            StringRequest stringRequest = new StringRequest(Request.Method.PUT, NotifyOpenHelper.SERVER_URL, new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    Log.d(TAG + " Response:", response);
+                }
+            }, new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
-
-                    updateToLocalStorage();
+                    Log.d(TAG + " Error:", error.toString());
                 }
             }) {
                 @Override
-                protected Map<String, String> getParams() throws AuthFailureError {
-                    Map<String, String> params = new HashMap<>();
-//                    params.put("name", name);
-                    return params;
+                public String getBodyContentType() {
+                    return String.format("application/json; charset=utf-8");
+                }
+
+                @Override
+                public byte[] getBody() throws AuthFailureError {
+                    try {
+                        return requestBody == null ? null : requestBody.getBytes("utf-8");
+                    } catch (UnsupportedEncodingException uee) {
+                        VolleyLog.wtf(TAG + " Unsupported Encoding while trying to get the bytes of %s using %s",
+                                requestBody, "utf-8");
+                        return null;
+                    }
                 }
             };
             MySingleton.getInstance(this).addToRequestQue(stringRequest);
-        } else {
-            updateToLocalStorage();
-        }
 
+        }
     }
+
 
     public boolean checkNetworkConnection() {
         ConnectivityManager connectivityManager = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);

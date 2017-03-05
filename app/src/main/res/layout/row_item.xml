@@ -23,15 +23,6 @@
         android:text="Time"
         android:textColor="@android:color/black" />
 
-    <ImageView
-        android:id="@+id/infoItem"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_centerVertical="true"
-        android:src="@android:drawable/ic_dialog_info" />
-
 
     <LinearLayout
         android:layout_width="wrap_content"
