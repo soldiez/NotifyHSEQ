@@ -63,6 +63,7 @@ public class NotifyNewActivity extends AppCompatActivity {
     final int TYPE_PHOTO = 1;
     final int REQUEST_CODE_PHOTO = 1;
     final String TAG = "myLogs";
+    int mainNumber = 0;
     int sync;
     String mNewNotifyDate;
     String mNewNotifyTime;
@@ -409,7 +410,11 @@ public class NotifyNewActivity extends AppCompatActivity {
                 jsonObject.put("phonePerson", mPhonePerson);
                 jsonObject.put("departmentPerson", mDepartmentPerson);
                 Log.d(TAG + " URL:", jsonObject.toString());
-                requestBody = jsonObject.toString();
+                String action = "sync";
+                requestBody = "action=" + action + " jsondata=" + jsonObject.toString();
+
+
+//                requestBody = jsonObject.toString();
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -417,11 +422,13 @@ public class NotifyNewActivity extends AppCompatActivity {
                 @Override
                 public void onResponse(String response) {
                     Log.d(TAG + " Response:", response);
+
                 }
             }, new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
                     Log.d(TAG + " Error:", error.toString());
+
                 }
             }) {
                 @Override
@@ -441,7 +448,7 @@ public class NotifyNewActivity extends AppCompatActivity {
                 }
             };
             MySingleton.getInstance(this).addToRequestQue(stringRequest);
-
+            saveToLocalStorage();
         }
     }
 
@@ -452,7 +459,7 @@ public class NotifyNewActivity extends AppCompatActivity {
     }
 
     private void saveToLocalStorage() {
-        long val = adapter.insertDetails(sync, mNewNotifyCurrentDate, mNewNotifyCurrentTime, mNewNotifyDate, mNewNotifyTime,
+        long val = adapter.insertDetails(mainNumber, sync, mNewNotifyCurrentDate, mNewNotifyCurrentTime, mNewNotifyDate, mNewNotifyTime,
                 mNewNotifyAccidentType, mNewNotifyPlace, mNewNotifyDepartment, mNewNotifyDescription, mNamePath, mNameFile, mNotifyStatus, mNamePerson, mEmailPerson, mPhonePerson, mDepartmentPerson);
         // Toast.makeText(getApplicationContext(), Long.toString(val),
         // 300).show();

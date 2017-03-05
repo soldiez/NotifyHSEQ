@@ -57,7 +57,7 @@ public class NotifyEditActivity extends AppCompatActivity {
     final int TYPE_PHOTO = 1;
     final int REQUEST_CODE_PHOTO = 1;
     final String TAG = "myLogs";
-    int mainNumder;
+    int mainNumber;
     int sync;
     String mEditNotifyDate;
     String mEditNotifyTime;
@@ -207,7 +207,7 @@ public class NotifyEditActivity extends AppCompatActivity {
 
         if (c.moveToFirst()) {
             do {
-                mainNumder = Integer.parseInt(c.getString(0));
+                mainNumber = Integer.parseInt(c.getString(0));
                 sync = Integer.parseInt(c.getString(1));
                 mEditNotifyCurrentDate = c.getString(2);
                 mEditNotifyCurrentTime = c.getString(3);
@@ -252,7 +252,7 @@ public class NotifyEditActivity extends AppCompatActivity {
                 mEditNotifyDescription = editNotifyEditTextDescription.getText().toString();
                 sync = 0;
 
-                updateToLocalStorage();
+
                 updateToAppServer();//TODO must to save moore right save of data (only for changed fields
 
                 finish();
@@ -277,7 +277,7 @@ public class NotifyEditActivity extends AppCompatActivity {
 
                     JSONObject jsonObject = new JSONObject();
                     try {
-                        jsonObject.put("mainNumber", mainNumder);
+                        jsonObject.put("mainNumber", mainNumber);
                         jsonObject.put("sync", sync);
                         jsonObject.put("dateRegistration", mEditNotifyCurrentDate);
                         jsonObject.put("timeRegistration", mEditNotifyCurrentTime);
@@ -433,7 +433,7 @@ public class NotifyEditActivity extends AppCompatActivity {
 
             JSONObject jsonObject = new JSONObject();
             try {
-                jsonObject.put("mainNumber", mainNumder);
+                jsonObject.put("mainNumber", mainNumber);
                 jsonObject.put("sync", sync);
                 jsonObject.put("dateRegistration", mEditNotifyCurrentDate);
                 jsonObject.put("timeRegistration", mEditNotifyCurrentTime);
@@ -483,7 +483,7 @@ public class NotifyEditActivity extends AppCompatActivity {
                 }
             };
             MySingleton.getInstance(this).addToRequestQue(stringRequest);
-
+            updateToLocalStorage();
         }
     }
 
@@ -495,7 +495,7 @@ public class NotifyEditActivity extends AppCompatActivity {
     }
 
     private void updateToLocalStorage() {
-        long val = adapter.updateDetail(rowId, mainNumder, sync, mEditNotifyCurrentDate, mEditNotifyCurrentTime,
+        long val = adapter.updateDetail(rowId, mainNumber, sync, mEditNotifyCurrentDate, mEditNotifyCurrentTime,
                 mEditNotifyDate, mEditNotifyTime, mEditNotifyAccidentType, mEditNotifyPlace,
                 mEditNotifyDepartment, mEditNotifyDescription, mNamePath, mNameFile, mNotifyStatus,
                 mNamePerson, mEmailPerson, mPhonePerson, mDepartmentPerson);

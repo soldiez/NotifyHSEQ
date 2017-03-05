@@ -36,11 +36,12 @@ public class DBAdapter {
     }
 
 
-    public long insertDetails(int sync, String dateRegistration, String timeRegistration,
+    public long insertDetails(int mainNumber, int sync, String dateRegistration, String timeRegistration,
                               String dateHappened, String timeHappened, String type, String place,
                               String department, String description, String photoPath, String photoName,
                               int status, String namePerson, String emailPerson, String phonePerson, String departmentPerson) {
         ContentValues contentValues = new ContentValues();
+        contentValues.put(openHelper_ob.MAIN_NUMBER, mainNumber);
         contentValues.put(openHelper_ob.SYNC, sync);
         contentValues.put(openHelper_ob.DATE_REGISTRATION, dateRegistration);
         contentValues.put(openHelper_ob.TIME_REGISTRATION, timeRegistration);
@@ -67,6 +68,7 @@ public class DBAdapter {
 
     public Cursor queryName() {
         String[] cols = {openHelper_ob.KEY_ID,
+                openHelper_ob.MAIN_NUMBER,
                 openHelper_ob.SYNC,
                 openHelper_ob.DATE_REGISTRATION,
                 openHelper_ob.TIME_REGISTRATION,
@@ -93,6 +95,7 @@ public class DBAdapter {
 
     public Cursor queryAll(int id) {
         String[] cols = {openHelper_ob.KEY_ID,
+                openHelper_ob.MAIN_NUMBER,
                 openHelper_ob.SYNC,
                 openHelper_ob.DATE_REGISTRATION,
                 openHelper_ob.TIME_REGISTRATION,
