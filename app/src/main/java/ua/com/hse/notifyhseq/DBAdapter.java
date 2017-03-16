@@ -67,7 +67,8 @@ public class DBAdapter {
     }
 
     public Cursor queryName() {
-        String[] cols = {openHelper_ob.KEY_ID,
+        String[] cols = {
+                openHelper_ob.KEY_ID,
                 openHelper_ob.MAIN_NUMBER,
                 openHelper_ob.SYNC,
                 openHelper_ob.DATE_REGISTRATION,
@@ -94,7 +95,10 @@ public class DBAdapter {
     }
 
     public Cursor queryAll(int id) {
-        String[] cols = {openHelper_ob.KEY_ID,
+        String[] cols = {
+
+
+      /*          openHelper_ob.KEY_ID,   */
                 openHelper_ob.MAIN_NUMBER,
                 openHelper_ob.SYNC,
                 openHelper_ob.DATE_REGISTRATION,
@@ -149,7 +153,7 @@ public class DBAdapter {
         return val;
     }
 
-    public int deletOneRecord(int rowId) {
+    public int deleteOneRecord(int rowId) {
         // TODO Auto-generated method stub
         opnToWrite();
         int val = database_ob.delete(openHelper_ob.TABLE_NAME,

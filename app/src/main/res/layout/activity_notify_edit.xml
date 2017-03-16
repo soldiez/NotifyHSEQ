@@ -30,8 +30,9 @@
                 android:id="@+id/takePhotoOne"
                 android:layout_width="match_parent"
                 android:layout_height="40pt"
-
+                android:adjustViewBounds="true"
                 android:paddingBottom="8dp"
+                android:scaleType="centerCrop"
                 app:srcCompat="@android:drawable/ic_menu_camera" />
 
             <LinearLayout
@@ -177,12 +178,6 @@
                     android:layout_weight="1"
                     android:text="@string/update_notify" />
 
-                <Button
-                    android:id="@+id/deleteNotifyButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/Delete_Notify" />
 
             </LinearLayout>
         </LinearLayout>

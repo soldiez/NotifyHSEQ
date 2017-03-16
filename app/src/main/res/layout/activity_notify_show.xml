@@ -8,7 +8,6 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true">
 
-
     <android.support.v4.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -26,9 +25,9 @@
             >
 
             <ImageView
-                android:id="@+id/takePhotoOne"
+                android:id="@+id/takePicture"
                 android:layout_width="match_parent"
-                android:layout_height="40pt"
+                android:layout_height="80pt"
                 android:adjustViewBounds="true"
                 android:paddingBottom="8dp"
                 android:scaleType="centerCrop"
@@ -39,22 +38,20 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:paddingBottom="8dp">
+                android:paddingBottom="8dp"
+                android:paddingTop="8dp">
 
-                <Button
-                    android:id="@+id/newNotifyDateButton"
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/get_date" />
+                    android:text="@string/registered" />
 
-                <EditText
-                    android:id="@+id/newNotifyDate"
+                <TextView
+                    android:id="@+id/NotifyDateTimeRegistered"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="@dimen/activity_horizontal_margin"
-                    android:gravity="start"
-                    android:hint="@string/Curent_Data"
-                    android:inputType="date" />
+                    android:gravity="start" />
 
             </LinearLayout>
 
@@ -63,21 +60,20 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:paddingBottom="8dp">
+                android:paddingBottom="8dp"
+                android:paddingTop="8dp">
 
-                <Button
-                    android:id="@+id/newNotifyTimeButton"
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/get_time" />
+                    android:text="@string/happened" />
 
-                <EditText
-                    android:id="@+id/newNotifyTime"
+                <TextView
+                    android:id="@+id/NotifyDateTimeHappened"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="@dimen/activity_horizontal_margin"
-                    android:gravity="start"
-                    android:hint="@string/Curent_Time" />
+                    android:gravity="start" />
 
             </LinearLayout>
 
@@ -86,18 +82,19 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:paddingBottom="8dp"
-                android:paddingLeft="8dp"
-                android:paddingTop="16dp">
+                android:paddingTop="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/New_notify_place" />
 
-                <Spinner
-                    android:id="@+id/newNotifyPlace"
+                <TextView
+                    android:id="@+id/NotifyPlace"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/activity_horizontal_margin"
+                    android:gravity="start" />
 
             </LinearLayout>
 
@@ -106,18 +103,19 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:paddingBottom="8dp"
-                android:paddingLeft="8dp"
-                android:paddingTop="16dp">
+                android:paddingTop="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/New_notify_Department" />
 
-                <Spinner
-                    android:id="@+id/newNotifyDepartment"
+                <TextView
+                    android:id="@+id/NotifyDepartment"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/activity_horizontal_margin"
+                    android:gravity="start" />
 
             </LinearLayout>
 
@@ -126,16 +124,15 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:paddingBottom="8dp"
-                android:paddingLeft="8dp"
-                android:paddingTop="16dp">
+                android:paddingTop="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/New_notify_AcidentType" />
 
-                <Spinner
-                    android:id="@+id/newNotifyAccidentType"
+                <TextView
+                    android:id="@+id/NotifyAccidentType"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
@@ -146,21 +143,18 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:paddingBottom="8dp"
-                android:paddingLeft="8dp"
-                android:paddingTop="16dp">
+                android:paddingTop="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/New_notify_Description" />
 
-                <EditText
-                    android:id="@+id/newNotifyCurentDescription"
+                <TextView
+                    android:id="@+id/NotifyDescription"
                     android:layout_width="match_parent"
                     android:layout_height="50pt"
-                    android:gravity="top"
-                    android:hint="@string/enter_text_please"
-                    android:inputType="textMultiLine" />
+                    android:gravity="top" />
 
             </LinearLayout>
 
@@ -171,18 +165,18 @@
                 android:orientation="horizontal">
 
                 <Button
-                    android:id="@+id/saveNotifyButton"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/editNotifyButton"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/Save_Notify" />
+                    android:layout_weight="0.5"
+                    android:text="@string/edit_notify" />
 
                 <Button
-                    android:id="@+id/sendNotifyButton"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/deleteNotifyButton"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/Send_Notify" />
+                    android:layout_weight="0.5"
+                    android:text="@string/Delete_Notify" />
 
             </LinearLayout>
         </LinearLayout>

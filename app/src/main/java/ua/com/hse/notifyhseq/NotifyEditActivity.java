@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -20,7 +21,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -77,7 +77,8 @@ public class NotifyEditActivity extends AppCompatActivity {
     EditText editNotifyEditTextDate, editNotifyEditTextTime, editNotifyEditTextDescription;
     // Для фото переменные
     File directory;
-    String mNameFile, mNamePath;
+
+    String mNameFile, mNamePath, mNameFileNew, mNamePathNew;
     // for database
     DBAdapter adapter;
     NotifyOpenHelper notifyOpenHelper;
@@ -145,7 +146,6 @@ public class NotifyEditActivity extends AppCompatActivity {
         });
 
 
-
 //** Привязка к объектам в отображении
         editNotifyEditTextDescription = (EditText) findViewById(R.id.editNotifyCurentDescription);
 
@@ -180,22 +180,6 @@ public class NotifyEditActivity extends AppCompatActivity {
         adapterAccidentType.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 // Apply the adapter to the spinner
         spinnerAccidentType.setAdapter(adapterAccidentType);
-
-
-// обработка картинки фото
-        final ImageView buttonTakePhotoOne = (ImageView) findViewById(R.id.takePhotoOne);
-        buttonTakePhotoOne.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-
-                //** делаем фото, сохраняем и вставляем в вид
-                Intent intentPhoto = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                intentPhoto.putExtra(MediaStore.EXTRA_OUTPUT, generateFileUri(TYPE_PHOTO));
-                startActivityForResult(intentPhoto, REQUEST_CODE_PHOTO);
-
-            }
-        });
-
-//загрузка данных из вызванной ячейки
 
         Bundle showData = getIntent().getExtras();
         rowId = showData.getInt("keyid");
@@ -236,6 +220,52 @@ public class NotifyEditActivity extends AppCompatActivity {
             } while (c.moveToNext());
         }
 
+
+// обработка картинки фото
+        final ImageView buttonTakePhotoOne = (ImageView) findViewById(R.id.takePhotoOne);
+
+
+        File imgFile = new File(mNamePath + "/" + mNameFile);
+
+        if (imgFile.exists() && imgFile.isFile()) {
+            Bitmap bitmapImage = BitmapFactory.decodeFile(mNamePath + "/" + mNameFile);
+            int nh = (int) (bitmapImage.getHeight() * (512.0 / bitmapImage.getWidth()));
+            Bitmap scaled = Bitmap.createScaledBitmap(bitmapImage, 512, nh, true);
+            buttonTakePhotoOne.setImageBitmap(scaled);
+
+            buttonTakePhotoOne.setOnClickListener(new View.OnClickListener() {
+
+
+                public void onClick(View v) {
+                    //TODO show photo
+//** делаем фото, сохраняем и вставляем в вид
+                    Intent intentPhoto = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    intentPhoto.putExtra(MediaStore.EXTRA_OUTPUT, generateFileUri(TYPE_PHOTO));
+                    startActivityForResult(intentPhoto, REQUEST_CODE_PHOTO);
+
+
+                }
+            });
+        } else {
+
+            buttonTakePhotoOne.setOnClickListener(new View.OnClickListener() {
+
+
+                public void onClick(View v) {
+                    //TODO show photo
+//** делаем фото, сохраняем и вставляем в вид
+                    Intent intentPhoto = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    intentPhoto.putExtra(MediaStore.EXTRA_OUTPUT, generateFileUri(TYPE_PHOTO));
+                    startActivityForResult(intentPhoto, REQUEST_CODE_PHOTO);
+
+                }
+            });
+        }
+
+//загрузка данных из вызванной ячейки
+
+
+
 //update button - listener
         final Button buttonUpdateNotify = (Button) findViewById(R.id.updateNotifyButton);
         buttonUpdateNotify.setOnClickListener(new View.OnClickListener() {
@@ -263,85 +293,10 @@ public class NotifyEditActivity extends AppCompatActivity {
             }
         });
 
-        deleteButton = (Button) findViewById(R.id.deleteNotifyButton);
-        deleteButton.setOnClickListener(new OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                // TODO Are you sure window?
-
-                adapter.deletOneRecord(rowId);
-
-//delete from app server
-                if (checkNetworkConnection()) {
-
-                    JSONObject jsonObject = new JSONObject();
-                    try {
-                        jsonObject.put("mainNumber", mainNumber);
-                        jsonObject.put("sync", sync);
-                        jsonObject.put("dateRegistration", mEditNotifyCurrentDate);
-                        jsonObject.put("timeRegistration", mEditNotifyCurrentTime);
-                        jsonObject.put("dateHappened", mEditNotifyDate);
-                        jsonObject.put("timeHappened", mEditNotifyTime);
-                        jsonObject.put("type", mEditNotifyAccidentType);
-                        jsonObject.put("place", mEditNotifyPlace);
-                        jsonObject.put("department", mEditNotifyDepartment);
-                        jsonObject.put("description", mEditNotifyDescription);
-                        jsonObject.put("photoPath", mNamePath);
-                        jsonObject.put("photoName", mNameFile);
-                        jsonObject.put("status", mNotifyStatus);
-                        jsonObject.put("namePerson", mNamePerson);
-                        jsonObject.put("emailPerson", mEmailPerson);
-                        jsonObject.put("phonePerson", mPhonePerson);
-                        jsonObject.put("departmentPerson", mDepartmentPerson);
-                        Log.d(TAG + " URL:", jsonObject.toString());
-                        requestBody = jsonObject.toString();
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                    StringRequest stringRequest = new StringRequest(Request.Method.DELETE, NotifyOpenHelper.SERVER_URL, new Response.Listener<String>() {
-                        @Override
-                        public void onResponse(String response) {
-                            Log.d(TAG + " Response:", response);
-                        }
-                    }, new Response.ErrorListener() {
-                        @Override
-                        public void onErrorResponse(VolleyError error) {
-                            Log.d(TAG + " Error:", error.toString());
-                        }
-                    }) {
-                        @Override
-                        public String getBodyContentType() {
-                            return String.format("application/json; charset=utf-8");
-                        }
-
-                        @Override
-                        public byte[] getBody() throws AuthFailureError {
-                            try {
-                                return requestBody == null ? null : requestBody.getBytes("utf-8");
-                            } catch (UnsupportedEncodingException uee) {
-                                VolleyLog.wtf(TAG + " Unsupported Encoding while trying to get the bytes of %s using %s",
-                                        requestBody, "utf-8");
-                                return null;
-                            }
-                        }
-                    };
-                    MySingleton.getInstance(NotifyEditActivity.this).addToRequestQue(stringRequest);
-
-                }
-
-                finish();
-                // going back to MainActivity
-                Intent activityChangeIntent = new Intent(NotifyEditActivity.this, MainActivity.class);
-                // currentContext.startActivity(activityChangeIntent);
-                NotifyEditActivity.this.startActivity(activityChangeIntent);
-            }
-        });
-
     }
 
 
-// work with photo
+
 
     //get place for text in spinner
     private int getIndex(Spinner spinner, String myString) {
@@ -385,9 +340,9 @@ public class NotifyEditActivity extends AppCompatActivity {
 
     private Uri generateFileUri(int type) {
         File file = null;
-        mNameFile = "photo_" + System.currentTimeMillis() + ".jpg";
-        mNamePath = directory.getPath();
-        file = new File(mNamePath + "/" + mNameFile);
+        mNameFileNew = "photo_" + System.currentTimeMillis() + ".jpg";
+        mNamePathNew = directory.getPath();
+        file = new File(mNamePathNew + "/" + mNameFileNew);
 
         Log.d(TAG, "fileName = " + file);
         return Uri.fromFile(file);
@@ -443,8 +398,8 @@ public class NotifyEditActivity extends AppCompatActivity {
                 jsonObject.put("place", mEditNotifyPlace);
                 jsonObject.put("department", mEditNotifyDepartment);
                 jsonObject.put("description", mEditNotifyDescription);
-                jsonObject.put("photoPath", mNamePath);
-                jsonObject.put("photoName", mNameFile);
+                jsonObject.put("photoPath", mNamePathNew);
+                jsonObject.put("photoName", mNameFileNew);
                 jsonObject.put("status", mNotifyStatus);
                 jsonObject.put("namePerson", mNamePerson);
                 jsonObject.put("emailPerson", mEmailPerson);
@@ -497,10 +452,11 @@ public class NotifyEditActivity extends AppCompatActivity {
     private void updateToLocalStorage() {
         long val = adapter.updateDetail(rowId, mainNumber, sync, mEditNotifyCurrentDate, mEditNotifyCurrentTime,
                 mEditNotifyDate, mEditNotifyTime, mEditNotifyAccidentType, mEditNotifyPlace,
-                mEditNotifyDepartment, mEditNotifyDescription, mNamePath, mNameFile, mNotifyStatus,
+                mEditNotifyDepartment, mEditNotifyDescription, mNamePathNew, mNameFileNew, mNotifyStatus,
                 mNamePerson, mEmailPerson, mPhonePerson, mDepartmentPerson);
         // Toast.makeText(getApplicationContext(), Long.toString(val),
         // 300).show();
     }
+
 
 }

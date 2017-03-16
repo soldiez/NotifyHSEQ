@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
                 // Integer.toString(nameId), 500).show();
                 passdata.putInt("keyid", nameId);
                 Intent passIntent = new Intent(MainActivity.this,
-                        NotifyEditActivity.class);
+                        NotifyShowActivity.class);
                 passIntent.putExtras(passdata);
                 startActivity(passIntent);
             }

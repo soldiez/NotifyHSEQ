@@ -120,6 +120,10 @@
     <string name="Delete_Notify">Delete Notify</string>
     <string name="update_notify">Update Notify</string>
     <string name="enter_text_please">Enter text please</string>
+    <string name="registered">Registered:</string>
+    <string name="happened">Happened:</string>
+    <string name="edit_notify">Edit Notify</string>
+    <string name="view_notify">View Notify</string>
 
 
 </resources>

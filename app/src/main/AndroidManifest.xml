@@ -27,6 +27,13 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".NotifyShowActivity"
+            android:label="@string/view_notify">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".NotifyNewActivity"
             android:label="@string/New_notify">
             <intent-filter>

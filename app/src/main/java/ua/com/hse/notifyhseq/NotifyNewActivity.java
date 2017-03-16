@@ -411,7 +411,7 @@ public class NotifyNewActivity extends AppCompatActivity {
                 jsonObject.put("departmentPerson", mDepartmentPerson);
                 Log.d(TAG + " URL:", jsonObject.toString());
                 String action = "sync";
-                requestBody = "action=" + action + " jsondata=" + jsonObject.toString();
+                requestBody = "action=" + action + "&jsondata=" + jsonObject.toString();
 
 
 //                requestBody = jsonObject.toString();
@@ -431,11 +431,11 @@ public class NotifyNewActivity extends AppCompatActivity {
 
                 }
             }) {
-                @Override
-                public String getBodyContentType() {
-                    return String.format("application/json; charset=utf-8");
-                }
-
+                /*               @Override
+                                public String getBodyContentType() {
+                                    return String.format("application/json; charset=utf-8");
+                                }
+                */
                 @Override
                 public byte[] getBody() throws AuthFailureError {
                     try {
@@ -459,8 +459,10 @@ public class NotifyNewActivity extends AppCompatActivity {
     }
 
     private void saveToLocalStorage() {
-        long val = adapter.insertDetails(mainNumber, sync, mNewNotifyCurrentDate, mNewNotifyCurrentTime, mNewNotifyDate, mNewNotifyTime,
-                mNewNotifyAccidentType, mNewNotifyPlace, mNewNotifyDepartment, mNewNotifyDescription, mNamePath, mNameFile, mNotifyStatus, mNamePerson, mEmailPerson, mPhonePerson, mDepartmentPerson);
+        long val = adapter.insertDetails(mainNumber, sync, mNewNotifyCurrentDate, mNewNotifyCurrentTime,
+                mNewNotifyDate, mNewNotifyTime, mNewNotifyAccidentType, mNewNotifyPlace,
+                mNewNotifyDepartment, mNewNotifyDescription, mNamePath, mNameFile, mNotifyStatus,
+                mNamePerson, mEmailPerson, mPhonePerson, mDepartmentPerson);
         // Toast.makeText(getApplicationContext(), Long.toString(val),
         // 300).show();
 
