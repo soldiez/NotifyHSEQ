@@ -79,9 +79,6 @@ public class NotifyEditActivity extends AppCompatActivity {
     File directory;
 
     String mNameFile, mNamePath, mNameFileNew, mNamePathNew;
-    // for database
-    DBAdapter adapter;
-    NotifyOpenHelper notifyOpenHelper;
 
 
     //    NotifyOpenHelper openHelper;
@@ -116,7 +113,6 @@ public class NotifyEditActivity extends AppCompatActivity {
         //Создание директории (если ее нет)
         createDirectory();
         // actualise database
-        adapter = new DBAdapter(this); //?
 
 
 //Date picker
@@ -283,8 +279,6 @@ public class NotifyEditActivity extends AppCompatActivity {
                 sync = 0;
 
 
-                updateToAppServer();//TODO must to save moore right save of data (only for changed fields
-
                 finish();
                 // going back to MainActivity
                 Intent activityChangeIntent = new Intent(NotifyEditActivity.this, MainActivity.class);
@@ -382,81 +376,7 @@ public class NotifyEditActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void updateToAppServer() {
 
-        if (checkNetworkConnection()) {
-
-            JSONObject jsonObject = new JSONObject();
-            try {
-                jsonObject.put("mainNumber", mainNumber);
-                jsonObject.put("sync", sync);
-                jsonObject.put("dateRegistration", mEditNotifyCurrentDate);
-                jsonObject.put("timeRegistration", mEditNotifyCurrentTime);
-                jsonObject.put("dateHappened", mEditNotifyDate);
-                jsonObject.put("timeHappened", mEditNotifyTime);
-                jsonObject.put("type", mEditNotifyAccidentType);
-                jsonObject.put("place", mEditNotifyPlace);
-                jsonObject.put("department", mEditNotifyDepartment);
-                jsonObject.put("description", mEditNotifyDescription);
-                jsonObject.put("photoPath", mNamePathNew);
-                jsonObject.put("photoName", mNameFileNew);
-                jsonObject.put("status", mNotifyStatus);
-                jsonObject.put("namePerson", mNamePerson);
-                jsonObject.put("emailPerson", mEmailPerson);
-                jsonObject.put("phonePerson", mPhonePerson);
-                jsonObject.put("departmentPerson", mDepartmentPerson);
-                Log.d(TAG + " URL:", jsonObject.toString());
-                requestBody = jsonObject.toString();
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            StringRequest stringRequest = new StringRequest(Request.Method.PUT, NotifyOpenHelper.SERVER_URL, new Response.Listener<String>() {
-                @Override
-                public void onResponse(String response) {
-                    Log.d(TAG + " Response:", response);
-                }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    Log.d(TAG + " Error:", error.toString());
-                }
-            }) {
-                @Override
-                public String getBodyContentType() {
-                    return String.format("application/json; charset=utf-8");
-                }
-
-                @Override
-                public byte[] getBody() throws AuthFailureError {
-                    try {
-                        return requestBody == null ? null : requestBody.getBytes("utf-8");
-                    } catch (UnsupportedEncodingException uee) {
-                        VolleyLog.wtf(TAG + " Unsupported Encoding while trying to get the bytes of %s using %s",
-                                requestBody, "utf-8");
-                        return null;
-                    }
-                }
-            };
-            MySingleton.getInstance(this).addToRequestQue(stringRequest);
-            updateToLocalStorage();
-        }
-    }
-
-
-    public boolean checkNetworkConnection() {
-        ConnectivityManager connectivityManager = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        return (networkInfo != null && networkInfo.isConnected());
-    }
-
-    private void updateToLocalStorage() {
-        long val = adapter.updateDetail(rowId, mainNumber, sync, mEditNotifyCurrentDate, mEditNotifyCurrentTime,
-                mEditNotifyDate, mEditNotifyTime, mEditNotifyAccidentType, mEditNotifyPlace,
-                mEditNotifyDepartment, mEditNotifyDescription, mNamePathNew, mNameFileNew, mNotifyStatus,
-                mNamePerson, mEmailPerson, mPhonePerson, mDepartmentPerson);
-        // Toast.makeText(getApplicationContext(), Long.toString(val),
-        // 300).show();
-    }
 
 
 }

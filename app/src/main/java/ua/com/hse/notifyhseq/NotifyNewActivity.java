@@ -2,12 +2,9 @@ package ua.com.hse.notifyhseq;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -25,18 +22,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.VolleyLog;
-import com.android.volley.toolbox.StringRequest;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -85,8 +71,7 @@ public class NotifyNewActivity extends AppCompatActivity {
     File directory;
     String mNameFile = "", mNamePath = "";
     // for database
-    DBAdapter adapter;
-    NotifyOpenHelper helper;
+
     String requestBody;
 
     /**
@@ -116,8 +101,7 @@ public class NotifyNewActivity extends AppCompatActivity {
         verifyStoragePermissions(this);
         //Создание директории (если ее нет)
         createDirectory();
-        // actualise database
-        adapter = new DBAdapter(this);
+
 
 //** Получение текущей даты и времени из системы
         Calendar c = Calendar.getInstance();
@@ -215,7 +199,6 @@ public class NotifyNewActivity extends AppCompatActivity {
                 mNewNotifyDescription = newNotifyEditTextDescription.getText().toString();
                 sync = 0;
 
-                saveToAppServer();
 
                 // going back to MainActivity
                 Intent activityChangeIntent = new Intent(NotifyNewActivity.this, MainActivity.class);
@@ -388,83 +371,5 @@ public class NotifyNewActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void saveToAppServer() {
 
-        if (checkNetworkConnection()) {
-
-            JSONObject jsonObject = new JSONObject();
-            try {
-                jsonObject.put("dateRegistration", mNewNotifyCurrentDate);
-                jsonObject.put("timeRegistration", mNewNotifyCurrentTime);
-                jsonObject.put("dateHappened", mNewNotifyDate);
-                jsonObject.put("timeHappened", mNewNotifyTime);
-                jsonObject.put("type", mNewNotifyAccidentType);
-                jsonObject.put("place", mNewNotifyPlace);
-                jsonObject.put("department", mNewNotifyDepartment);
-                jsonObject.put("description", mNewNotifyDescription);
-                jsonObject.put("photoPath", mNamePath);
-                jsonObject.put("photoName", mNameFile);
-                jsonObject.put("status", mNotifyStatus);
-                jsonObject.put("namePerson", mNamePerson);
-                jsonObject.put("emailPerson", mEmailPerson);
-                jsonObject.put("phonePerson", mPhonePerson);
-                jsonObject.put("departmentPerson", mDepartmentPerson);
-                Log.d(TAG + " URL:", jsonObject.toString());
-                String action = "sync";
-                requestBody = "action=" + action + "&jsondata=" + jsonObject.toString();
-
-
-//                requestBody = jsonObject.toString();
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            StringRequest stringRequest = new StringRequest(Request.Method.POST, NotifyOpenHelper.SERVER_URL, new Response.Listener<String>() {
-                @Override
-                public void onResponse(String response) {
-                    Log.d(TAG + " Response:", response);
-
-                }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    Log.d(TAG + " Error:", error.toString());
-
-                }
-            }) {
-                /*               @Override
-                                public String getBodyContentType() {
-                                    return String.format("application/json; charset=utf-8");
-                                }
-                */
-                @Override
-                public byte[] getBody() throws AuthFailureError {
-                    try {
-                        return requestBody == null ? null : requestBody.getBytes("utf-8");
-                    } catch (UnsupportedEncodingException uee) {
-                        VolleyLog.wtf(TAG + " Unsupported Encoding while trying to get the bytes of %s using %s",
-                                requestBody, "utf-8");
-                        return null;
-                    }
-                }
-            };
-            MySingleton.getInstance(this).addToRequestQue(stringRequest);
-            saveToLocalStorage();
-        }
-    }
-
-    public boolean checkNetworkConnection() {
-        ConnectivityManager connectivityManager = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        return (networkInfo != null && networkInfo.isConnected());
-    }
-
-    private void saveToLocalStorage() {
-        long val = adapter.insertDetails(mainNumber, sync, mNewNotifyCurrentDate, mNewNotifyCurrentTime,
-                mNewNotifyDate, mNewNotifyTime, mNewNotifyAccidentType, mNewNotifyPlace,
-                mNewNotifyDepartment, mNewNotifyDescription, mNamePath, mNameFile, mNotifyStatus,
-                mNamePerson, mEmailPerson, mPhonePerson, mDepartmentPerson);
-        // Toast.makeText(getApplicationContext(), Long.toString(val),
-        // 300).show();
-
-    }
 }

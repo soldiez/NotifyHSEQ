@@ -52,11 +52,6 @@
             android:name=".NotifyEditActivity"
             android:label="Update Notify" />
 
-        <receiver android:name=".NetworkMonitor">
-            <intent-filter>
-                <action android:name="android.net.conn.CONNECTIVITY_CHANGE"></action>
-            </intent-filter>
-        </receiver>
     </application>
 
 </manifest>

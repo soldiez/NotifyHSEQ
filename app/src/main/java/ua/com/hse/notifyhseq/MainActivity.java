@@ -23,12 +23,10 @@ import static ua.com.hse.notifyhseq.R.layout.activity_main;
 public class MainActivity extends AppCompatActivity {
 
     //Data for MSQLite activities
-    DBAdapter adapter_ob;
-    NotifyOpenHelper helper_ob;
-    SQLiteDatabase db_ob;
+
+
     ListView nameList;
     Cursor cursor;
-    BroadcastReceiver broadcastReceiver;
 
 
     @Override
@@ -37,12 +35,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        broadcastReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                //               readFromLocaldStorage(); //TODO не понятно что делать если появился сигнал
-            }
-        };
+
 
 // code for MSQLite
         nameList = (ListView) findViewById(R.id.list);
@@ -130,12 +123,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        registerReceiver(broadcastReceiver, new IntentFilter(NotifyOpenHelper.UI_UPDATE_BROADCAST));
+
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        unregisterReceiver(broadcastReceiver);
+
     }
 }
