@@ -17,18 +17,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.VolleyLog;
-import com.android.volley.toolbox.StringRequest;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 
 public class NotifyShowActivity extends AppCompatActivity {
 
@@ -62,7 +51,7 @@ public class NotifyShowActivity extends AppCompatActivity {
     // Для фото переменные
     String mNameFile, mNamePath;
     // for database
-    DBAdapter adapter;
+    //   DBAdapter adapter;
 
     //NotifyOpenHelper openHelper;
     int rowId;
@@ -75,15 +64,15 @@ public class NotifyShowActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notify_show);
         // actualise database
-        adapter = new DBAdapter(this);
+        //       adapter = new DBAdapter(this);
 
         Bundle showData = getIntent().getExtras();
         rowId = showData.getInt("keyid");
         // Toast.makeText(getApplicationContext(), Integer.toString(rowId),
         // 500).show();
-        adapter = new DBAdapter(this);
+//        adapter = new DBAdapter(this);
 
-        c = adapter.queryAll(rowId);
+//        c = adapter.queryAll(rowId);
 
         if (c.moveToFirst()) {
             do {
@@ -176,64 +165,10 @@ public class NotifyShowActivity extends AppCompatActivity {
             public void onClick(View v) {
                 // TODO Are you sure window?
 
-                adapter.deleteOneRecord(rowId);
+//                adapter.deleteOneRecord(rowId);
 
 //delete from app server
-                if (checkNetworkConnection()) {
 
-                    JSONObject jsonObject = new JSONObject();
-                    try {
-                        jsonObject.put("mainNumber", mainNumber);
-                        jsonObject.put("sync", sync);
-                        jsonObject.put("dateRegistration", mEditNotifyCurrentDate);
-                        jsonObject.put("timeRegistration", mEditNotifyCurrentTime);
-                        jsonObject.put("dateHappened", mEditNotifyDate);
-                        jsonObject.put("timeHappened", mEditNotifyTime);
-                        jsonObject.put("type", mEditNotifyAccidentType);
-                        jsonObject.put("place", mEditNotifyPlace);
-                        jsonObject.put("department", mEditNotifyDepartment);
-                        jsonObject.put("description", mEditNotifyDescription);
-                        jsonObject.put("photoPath", mNamePath);
-                        jsonObject.put("photoName", mNameFile);
-                        jsonObject.put("status", mNotifyStatus);
-                        jsonObject.put("namePerson", mNamePerson);
-                        jsonObject.put("emailPerson", mEmailPerson);
-                        jsonObject.put("phonePerson", mPhonePerson);
-                        jsonObject.put("departmentPerson", mDepartmentPerson);
-                        requestBody = jsonObject.toString();
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                    StringRequest stringRequest = new StringRequest(Request.Method.DELETE, NotifyOpenHelper.SERVER_URL, new Response.Listener<String>() {
-                        @Override
-                        public void onResponse(String response) {
-
-                        }
-                    }, new Response.ErrorListener() {
-                        @Override
-                        public void onErrorResponse(VolleyError error) {
-
-                        }
-                    }) {
-                        @Override
-                        public String getBodyContentType() {
-                            return String.format("application/json; charset=utf-8");
-                        }
-
-                        @Override
-                        public byte[] getBody() throws AuthFailureError {
-                            try {
-                                return requestBody == null ? null : requestBody.getBytes("utf-8");
-                            } catch (UnsupportedEncodingException uee) {
-                                VolleyLog.wtf(" Unsupported Encoding while trying to get the bytes of %s using %s",
-                                        requestBody, "utf-8");
-                                return null;
-                            }
-                        }
-                    };
-                    MySingleton.getInstance(NotifyShowActivity.this).addToRequestQue(stringRequest);
-
-                }
 
                 finish();
                 // going back to MainActivity

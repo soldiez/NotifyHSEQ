@@ -22,6 +22,9 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
 import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -50,16 +53,15 @@ public class NotifyNewActivity extends AppCompatActivity {
     final int REQUEST_CODE_PHOTO = 1;
     final String TAG = "myLogs";
     int mainNumber = 0;
-    int sync;
     String mNewNotifyDate;
     String mNewNotifyTime;
-    String mNewNotifyCurrentDate;
     String mNewNotifyCurrentTime;
     String mNewNotifyPlace;
     String mNewNotifyDepartment;
     String mNewNotifyAccidentType;
     String mNewNotifyDescription;
-    String mNotifyFullText;
+    String mPhotoPath = "";
+    String mPhotoNameFile = "";
     int mNotifyStatus = 0;
     String mNamePerson = "Alex";
     String mEmailPerson = "soldiez@yandex.ru";
@@ -69,10 +71,11 @@ public class NotifyNewActivity extends AppCompatActivity {
     EditText newNotifyEditTextDate, newNotifyEditTextTime, newNotifyEditTextDescription;
     // Для фото переменные
     File directory;
-    String mNameFile = "", mNamePath = "";
-    // for database
 
-    String requestBody;
+    String mNotifyFullText;
+    // Firebase database
+    FirebaseDatabase mFirebaseDatabase;
+    DatabaseReference myRef;
 
     /**
      * Checks if the app has permission to write to device storage
@@ -101,6 +104,9 @@ public class NotifyNewActivity extends AppCompatActivity {
         verifyStoragePermissions(this);
         //Создание директории (если ее нет)
         createDirectory();
+
+        mFirebaseDatabase = FirebaseDatabase.getInstance();
+        myRef = mFirebaseDatabase.getReference("notifyHSEQ");
 
 
 //** Получение текущей даты и времени из системы
@@ -187,7 +193,7 @@ public class NotifyNewActivity extends AppCompatActivity {
 
                 DateFormat df1 = new SimpleDateFormat("d MMM yyyy");
                 DateFormat df2 = new SimpleDateFormat("HH:mm");
-                mNewNotifyCurrentDate = df1.format(Calendar.getInstance().getTime());
+//                mNewNotifyCurrentDate = df1.format(Calendar.getInstance().getTime());
                 mNewNotifyCurrentTime = df2.format(Calendar.getInstance().getTime());
 
 //**Получение данных из заполненных полей
@@ -197,7 +203,13 @@ public class NotifyNewActivity extends AppCompatActivity {
                 mNewNotifyPlace = spinnerPlace.getSelectedItem().toString();
                 mNewNotifyDepartment = spinnerDepartment.getSelectedItem().toString();
                 mNewNotifyDescription = newNotifyEditTextDescription.getText().toString();
-                sync = 0;
+
+//send to Firebase database
+                NotifyHSEQItem notifyHSEQItem = new NotifyHSEQItem(
+                        mainNumber, mNewNotifyCurrentTime, mNewNotifyDate, mNewNotifyTime, mNewNotifyAccidentType,
+                        mNewNotifyPlace, mNewNotifyDepartment, mNewNotifyDescription, mPhotoPath, mPhotoNameFile,
+                        mNotifyStatus, mNamePerson, mEmailPerson, mPhonePerson, mDepartmentPerson);
+                myRef.push().setValue(notifyHSEQItem);
 
 
                 // going back to MainActivity
@@ -217,7 +229,7 @@ public class NotifyNewActivity extends AppCompatActivity {
 
                 DateFormat df1 = new SimpleDateFormat("d MMM yyyy");
                 DateFormat df2 = new SimpleDateFormat("HH:mm");
-                mNewNotifyCurrentDate = df1.format(Calendar.getInstance().getTime());
+//                mNewNotifyCurrentDate = df1.format(Calendar.getInstance().getTime());
                 mNewNotifyCurrentTime = df2.format(Calendar.getInstance().getTime());
 
 //**Получение данных из заполненных полей
@@ -229,7 +241,7 @@ public class NotifyNewActivity extends AppCompatActivity {
                 mNewNotifyDescription = newNotifyEditTextDescription.getText().toString();
 
                 mNotifyFullText = "Notify:";
-                mNotifyFullText += "\nRegister: Date: " + mNewNotifyCurrentDate + " Time: " + mNewNotifyCurrentTime;
+                mNotifyFullText += "\nRegister: Date: " + mNewNotifyCurrentTime;
                 mNotifyFullText += "\nDate: " + mNewNotifyDate;
                 mNotifyFullText += "\nTime: " + mNewNotifyTime;
                 mNotifyFullText += "\nPlace: " + mNewNotifyPlace;
@@ -244,12 +256,12 @@ public class NotifyNewActivity extends AppCompatActivity {
                 Mail.MailBuilder builder = new Mail.MailBuilder();
                 Mail mail;
 
-                if (mNameFile == "") {
+                if (mPhotoNameFile == "") {
                     mail = builder
                             .setSender("soldiez111@gmail.com")
                             .addRecipient(new Recipient("soldiez@yandex.ru"))
 //                        .addRecipient(new Recipient(Recipient.TYPE.CC, recipientCC))
-                            .setSubject("Notify: " + mNewNotifyCurrentTime + " " + mNewNotifyCurrentTime)
+                            .setSubject("Notify: " + mNewNotifyCurrentTime)
                             .setText(mNotifyFullText)
 //                        .setHtml("<h1 style=\"color:red;\">Hello</h1>");
                             .build();
@@ -259,14 +271,14 @@ public class NotifyNewActivity extends AppCompatActivity {
                             .setSender("soldiez111@gmail.com")
                             .addRecipient(new Recipient("soldiez@yandex.ru"))
 //                        .addRecipient(new Recipient(Recipient.TYPE.CC, recipientCC))
-                            .setSubject("Notify: " + mNewNotifyCurrentTime + " " + mNewNotifyCurrentTime)
+                            .setSubject("Notify: " + mNewNotifyCurrentTime)
                             .setText(mNotifyFullText)
 //                        .setHtml("<h1 style=\"color:red;\">Hello</h1>");
-                            .addAttachment(new Attachment(mNamePath + "/" + mNameFile, mNameFile))
+                            .addAttachment(new Attachment(mPhotoPath + "/" + mPhotoNameFile, mPhotoNameFile))
                             .build();
                 }
-                Log.d(TAG + " Send", mNamePath);
-                Log.d(TAG + " Send", mNameFile);
+                Log.d(TAG + " Send", mPhotoPath);
+                Log.d(TAG + " Send", mPhotoNameFile);
 
                 MailSender.OnMailSentListener onMailSentListener = new MailSender.OnMailSentListener() {
 
@@ -331,9 +343,9 @@ public class NotifyNewActivity extends AppCompatActivity {
 
     private Uri generateFileUri(int type) {
         File file = null;
-        mNameFile = "photo_" + System.currentTimeMillis() + ".jpg";
-        mNamePath = directory.getPath();
-        file = new File(mNamePath + "/" + mNameFile);
+        mPhotoNameFile = "photo_" + System.currentTimeMillis() + ".jpg";
+        mPhotoPath = directory.getPath();
+        file = new File(mPhotoPath + "/" + mPhotoNameFile);
 
         Log.d(TAG, "fileName = " + file);
         return Uri.fromFile(file);

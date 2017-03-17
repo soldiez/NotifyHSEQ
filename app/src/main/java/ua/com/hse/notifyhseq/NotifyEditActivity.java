@@ -2,14 +2,11 @@ package ua.com.hse.notifyhseq;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -27,18 +24,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.VolleyLog;
-import com.android.volley.toolbox.StringRequest;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 
 import ua.com.hse.notifyhseq.pickers.DatePickerFragment;
 import ua.com.hse.notifyhseq.pickers.TimePickerFragment;
@@ -181,9 +167,9 @@ public class NotifyEditActivity extends AppCompatActivity {
         rowId = showData.getInt("keyid");
         // Toast.makeText(getApplicationContext(), Integer.toString(rowId),
         // 500).show();
-        adapter = new DBAdapter(this);
+//        adapter = new DBAdapter(this);
 
-        c = adapter.queryAll(rowId);
+        //       c = adapter.queryAll(rowId);
 
         if (c.moveToFirst()) {
             do {

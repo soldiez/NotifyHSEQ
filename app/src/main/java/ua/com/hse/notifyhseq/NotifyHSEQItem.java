@@ -3,8 +3,6 @@ package ua.com.hse.notifyhseq;
 
 public class NotifyHSEQItem {
     private int mainNumber;
-    private int sync;
-    private String dateRegistration;
     private String timeRegistration;
     private String dateHappened;
     private String timeHappened;
@@ -25,13 +23,11 @@ public class NotifyHSEQItem {
     public NotifyHSEQItem() {
     }
 
-    public NotifyHSEQItem(int mainNumber, int sync, String dateRegistration, String timeRegistration,
+    public NotifyHSEQItem(int mainNumber, String timeRegistration,
                           String dateHappened, String timeHappened, String type, String place,
                           String department, String description, String photoPath, String photoName,
                           int status, String namePerson, String emailPerson, String phonePerson, String departmentPerson) {
         this.mainNumber = mainNumber;
-        this.sync = sync;
-        this.dateRegistration = dateRegistration;
         this.timeRegistration = timeRegistration;
         this.dateHappened = dateHappened;
         this.timeHappened = timeHappened;
@@ -50,14 +46,6 @@ public class NotifyHSEQItem {
 
     public int getMainNumber() {
         return mainNumber;
-    }
-
-    public int getSync() {
-        return sync;
-    }
-
-    public String getDateRegistration() {
-        return dateRegistration;
     }
 
     public String getTimeRegistration() {

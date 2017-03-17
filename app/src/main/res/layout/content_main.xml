@@ -12,13 +12,22 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="ua.com.hse.notifyhseq.MainActivity"
     tools:showIn="@layout/activity_main">
+    <!--
+        <ListView
+            android:id="@+id/list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true">
 
-    <ListView
-        android:id="@+id/list"
+        </ListView>
+    -->
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/main_scroll_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true">
+        android:scrollbars="vertical">
 
-    </ListView>
+    </android.support.v7.widget.RecyclerView>
+
 </RelativeLayout>

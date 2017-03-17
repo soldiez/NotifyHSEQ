@@ -1,33 +1,36 @@
 package ua.com.hse.notifyhseq;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ListView;
+
+import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static ua.com.hse.notifyhseq.R.layout.activity_main;
 
 
 public class MainActivity extends AppCompatActivity {
 
-    //Data for MSQLite activities
-
-
-    ListView nameList;
-    Cursor cursor;
-
+    //Data for activities
+    RecyclerView recyclerView;
+    FirebaseRecyclerAdapter mAdapter;
+    FirebaseDatabase mFirebaseDatabase;
+    DatabaseReference mNotifyDatabaseReference;
+    ChildEventListener mChildEventListener;
+    private List<NotifyHSEQItem> notifyHSEQList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,38 +39,26 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        // Initialize Firebase components
+        mFirebaseDatabase = FirebaseDatabase.getInstance();
+        mNotifyDatabaseReference = mFirebaseDatabase.getReference().child("notifyHSEQ");
 
-// code for MSQLite
-        nameList = (ListView) findViewById(R.id.list);
-//        registerBtn = (Button) findViewById(R.id.btn_register);
-        adapter_ob = new DBAdapter(this);
+        recyclerView = (RecyclerView) findViewById(R.id.main_scroll_view);
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        String[] from = {helper_ob.DATE_REGISTRATION, helper_ob.TIME_REGISTRATION, helper_ob.TYPE};
-        int[] to = {R.id.dateItem, R.id.timeItem, R.id.typeItem}; //data for each row
-        cursor = adapter_ob.queryName();
-        SimpleCursorAdapter cursorAdapter = new SimpleCursorAdapter(this,
-                R.layout.row_item, cursor, from, to);
-        nameList.setAdapter(cursorAdapter);
-        nameList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mAdapter = new FirebaseRecyclerAdapter<NotifyHSEQItem, NotifyHSEQAdapter>(NotifyHSEQItem.class, R.layout.row_item,
+                NotifyHSEQAdapter.class, mNotifyDatabaseReference) {
 
             @Override
-            public void onItemClick(AdapterView arg0, View arg1, int arg2,
-                                    long arg3) {
-                // TODO Auto-generated method stub
-                Bundle passdata = new Bundle();
-                Cursor listCursor = (Cursor) arg0.getItemAtPosition(arg2);
-                int nameId = listCursor.getInt(listCursor
-                        .getColumnIndex(helper_ob.KEY_ID));
-                // Toast.makeText(getApplicationContext(),
-                // Integer.toString(nameId), 500).show();
-                passdata.putInt("keyid", nameId);
-                Intent passIntent = new Intent(MainActivity.this,
-                        NotifyShowActivity.class);
-                passIntent.putExtras(passdata);
-                startActivity(passIntent);
+            protected void populateViewHolder(NotifyHSEQAdapter viewHolder, NotifyHSEQItem model, int position) {
+                viewHolder.setmDateField(model.getDateHappened());
+                viewHolder.setmTimeField(model.getTimeRegistration());
+                viewHolder.setmTypeField(model.getType());
             }
+        };
+        recyclerView.setAdapter(mAdapter);
 
-        });
 
 
         //Запуск плавающей кнопки для введения извещения
@@ -90,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
-        cursor.requery();
+
 
     }
 
@@ -131,4 +122,6 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
 
     }
+
+
 }
