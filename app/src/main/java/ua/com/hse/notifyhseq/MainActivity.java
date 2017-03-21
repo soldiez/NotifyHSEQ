@@ -7,39 +7,42 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static ua.com.hse.notifyhseq.R.layout.activity_main;
 
 
 public class MainActivity extends AppCompatActivity {
 
+    static boolean calledAlready = false;
     //Data for activities
     RecyclerView recyclerView;
     FirebaseRecyclerAdapter mAdapter;
     FirebaseDatabase mFirebaseDatabase;
     DatabaseReference mNotifyDatabaseReference;
-    ChildEventListener mChildEventListener;
-    private List<NotifyHSEQItem> notifyHSEQList = new ArrayList<>();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         // Initialize Firebase components
+        if (!calledAlready) {
+            FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+            calledAlready = true;
+        }
+
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         mNotifyDatabaseReference = mFirebaseDatabase.getReference().child("notifyHSEQ");
 
@@ -51,15 +54,27 @@ public class MainActivity extends AppCompatActivity {
                 NotifyHSEQAdapter.class, mNotifyDatabaseReference) {
 
             @Override
-            protected void populateViewHolder(NotifyHSEQAdapter viewHolder, NotifyHSEQItem model, int position) {
-                viewHolder.setmDateField(model.getDateHappened());
-                viewHolder.setmTimeField(model.getTimeRegistration());
-                viewHolder.setmTypeField(model.getType());
+            protected void populateViewHolder(NotifyHSEQAdapter viewHolder, final NotifyHSEQItem notifyHSEQItem, final int position) {
+                viewHolder.setmDateField(notifyHSEQItem.getDateHappened());
+                viewHolder.setmTimeField(notifyHSEQItem.getTimeRegistration());
+                viewHolder.setmTypeField(notifyHSEQItem.getType());
+
+                viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        String key = mAdapter.getRef(position).getKey();
+                        Log.d("MyLOG     start    ", key);
+                        Intent intent = new Intent(view.getContext(), NotifyShowActivity.class);
+                        intent.putExtra("key", key);
+                        view.getContext().startActivity(intent);
+
+                    }
+                });
             }
+
         };
+
         recyclerView.setAdapter(mAdapter);
-
-
 
         //Запуск плавающей кнопки для введения извещения
 

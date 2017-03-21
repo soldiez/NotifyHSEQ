@@ -28,19 +28,21 @@ dependencies {
     compile files('src/libs/activation.jar')
     compile files('src/libs/additionnal.jar')
     compile files('src/libs/mail.jar')
+
+    // FirebaseUI Database only
+    
+
+
     compile 'com.android.support:appcompat-v7:25.2.0'
     compile 'com.android.support:design:25.2.0'
     compile 'com.android.support:support-v4:25.2.0'
     compile 'com.android.support:support-vector-drawable:25.2.0'
     compile 'com.github.erd:android-volley:1.0.0'
     compile 'com.google.firebase:firebase-database:10.0.1'
-    testCompile 'junit:junit:4.12'
-
-    // FirebaseUI Database only
     compile 'com.firebaseui:firebase-ui-database:1.2.0'
-
-
+    testCompile 'junit:junit:4.12'
 }
+
 
 
 apply plugin: 'com.google.gms.google-services'

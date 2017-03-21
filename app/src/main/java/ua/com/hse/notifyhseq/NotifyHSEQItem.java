@@ -1,8 +1,10 @@
 package ua.com.hse.notifyhseq;
 
 
-public class NotifyHSEQItem {
-    private int mainNumber;
+import java.io.Serializable;
+
+public class NotifyHSEQItem implements Serializable {
+    private int uid;
     private String timeRegistration;
     private String dateHappened;
     private String timeHappened;
@@ -23,11 +25,11 @@ public class NotifyHSEQItem {
     public NotifyHSEQItem() {
     }
 
-    public NotifyHSEQItem(int mainNumber, String timeRegistration,
+    public NotifyHSEQItem(int uid, String timeRegistration,
                           String dateHappened, String timeHappened, String type, String place,
                           String department, String description, String photoPath, String photoName,
                           int status, String namePerson, String emailPerson, String phonePerson, String departmentPerson) {
-        this.mainNumber = mainNumber;
+        this.uid = uid;
         this.timeRegistration = timeRegistration;
         this.dateHappened = dateHappened;
         this.timeHappened = timeHappened;
@@ -44,8 +46,8 @@ public class NotifyHSEQItem {
         this.departmentPerson = departmentPerson;
     }
 
-    public int getMainNumber() {
-        return mainNumber;
+    public int getUid() {
+        return uid;
     }
 
     public String getTimeRegistration() {
@@ -103,4 +105,6 @@ public class NotifyHSEQItem {
     public String getDepartmentPerson() {
         return departmentPerson;
     }
+
+
 }

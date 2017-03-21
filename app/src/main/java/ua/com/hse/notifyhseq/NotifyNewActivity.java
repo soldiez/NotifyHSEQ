@@ -52,7 +52,7 @@ public class NotifyNewActivity extends AppCompatActivity {
     final int TYPE_PHOTO = 1;
     final int REQUEST_CODE_PHOTO = 1;
     final String TAG = "myLogs";
-    int mainNumber = 0;
+    int uid = 1;
     String mNewNotifyDate;
     String mNewNotifyTime;
     String mNewNotifyCurrentTime;
@@ -206,7 +206,7 @@ public class NotifyNewActivity extends AppCompatActivity {
 
 //send to Firebase database
                 NotifyHSEQItem notifyHSEQItem = new NotifyHSEQItem(
-                        mainNumber, mNewNotifyCurrentTime, mNewNotifyDate, mNewNotifyTime, mNewNotifyAccidentType,
+                        uid, mNewNotifyCurrentTime, mNewNotifyDate, mNewNotifyTime, mNewNotifyAccidentType,
                         mNewNotifyPlace, mNewNotifyDepartment, mNewNotifyDescription, mPhotoPath, mPhotoNameFile,
                         mNotifyStatus, mNamePerson, mEmailPerson, mPhonePerson, mDepartmentPerson);
                 myRef.push().setValue(notifyHSEQItem);

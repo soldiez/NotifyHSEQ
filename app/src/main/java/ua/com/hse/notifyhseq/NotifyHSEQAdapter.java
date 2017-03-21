@@ -1,15 +1,20 @@
 package ua.com.hse.notifyhseq;
 
+import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.TextView;
 
 
-public class NotifyHSEQAdapter extends RecyclerView.ViewHolder {
+public class NotifyHSEQAdapter extends RecyclerView.ViewHolder implements View.OnClickListener {
 
     private final TextView mDateField;
     private final TextView mTimeField;
     private final TextView mTypeField;
+    Context mContext;
+    NotifyHSEQItem notifyHSEQItem;
+    int uid;
+
 
 
     public NotifyHSEQAdapter(View itemView) {
@@ -17,6 +22,9 @@ public class NotifyHSEQAdapter extends RecyclerView.ViewHolder {
         mDateField = (TextView) itemView.findViewById(R.id.dateItem);
         mTimeField = (TextView) itemView.findViewById(R.id.timeItem);
         mTypeField = (TextView) itemView.findViewById(R.id.typeItem);
+
+        itemView.setOnClickListener(this);
+
     }
 
     public void setmDateField(String date) {
@@ -31,51 +39,9 @@ public class NotifyHSEQAdapter extends RecyclerView.ViewHolder {
         mTypeField.setText(type);
     }
 
-
-//
-//
-//
-//    private List<NotifyHSEQItem> notifyHSEQList;
-//
-//
-//    public class MyViewHolder extends RecyclerView.ViewHolder {
-//        public TextView dateItem, timeItem, typeItem;
-//
-//        public MyViewHolder(View view) {
-//            super(view);
-//            dateItem = (TextView) view.findViewById(R.id.dateItem);
-//            timeItem = (TextView) view.findViewById(R.id.timeItem);
-//            typeItem = (TextView) view.findViewById(R.id.typeItem);
-//        }
-//    }
-//
-//
-//    public NotifyHSEQAdapter(List<NotifyHSEQItem> notifyList) {
-//        this.notifyHSEQList = notifyList;
-//    }
-//
-//    @Override
-//    public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-//        View itemView = LayoutInflater.from(parent.getContext())
-//                .inflate(R.layout.row_item, parent, false);
-//
-//        return new MyViewHolder(itemView);
-//    }
-//
-//    @Override
-//    public void onBindViewHolder(MyViewHolder holder, int position) {
-//        NotifyHSEQItem notifyHSEQItem = notifyHSEQList.get(position);
-//        holder.timeItem.setText(notifyHSEQItem.getTimeRegistration());
-//        holder.typeItem.setText(notifyHSEQItem.getType());
-//    }
-//
-//    @Override
-//    public int getItemCount() {
-//        return notifyHSEQList.size();
-//    }
-//
-//
-
+    @Override
+    public void onClick(View view) {
+    }
 
 }
 

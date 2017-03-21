@@ -4,7 +4,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -23,6 +22,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.io.File;
 
@@ -43,11 +48,10 @@ public class NotifyEditActivity extends AppCompatActivity {
     final int TYPE_PHOTO = 1;
     final int REQUEST_CODE_PHOTO = 1;
     final String TAG = "myLogs";
-    int mainNumber;
-    int sync;
+    int uid;
+
     String mEditNotifyDate;
     String mEditNotifyTime;
-    String mEditNotifyCurrentDate;
     String mEditNotifyCurrentTime;
     String mEditNotifyPlace;
     String mEditNotifyDepartment;
@@ -66,12 +70,10 @@ public class NotifyEditActivity extends AppCompatActivity {
 
     String mNameFile, mNamePath, mNameFileNew, mNamePathNew;
 
+    FirebaseDatabase mFirebaseDatabase;
+    DatabaseReference mNotifyDatabaseReference;
 
-    //    NotifyOpenHelper openHelper;
-    int rowId;
-    Cursor c;
-    Button deleteButton;
-    String requestBody;
+    String key;
 
     /**
      * Checks if the app has permission to write to device storage
@@ -101,182 +103,186 @@ public class NotifyEditActivity extends AppCompatActivity {
         // actualise database
 
 
-//Date picker
-        editNotifyEditTextDate = (EditText) findViewById(R.id.newNotifyDate);
-        final Button mPickDate = (Button) findViewById(R.id.editNotifyDateButton);
-        mPickDate.setOnClickListener(new View.OnClickListener() {
+        Intent intent = getIntent();
 
+        key = intent.getExtras().getString("key");
+        Log.d("MyLOG     ", key);
 
+        mFirebaseDatabase = FirebaseDatabase.getInstance();
+        mNotifyDatabaseReference = mFirebaseDatabase.getReference().child("notifyHSEQ").child(key);
+
+        mNotifyDatabaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onClick(View view) {
-                DialogFragment newFragment = new DatePickerFragment();
-                newFragment.show(getSupportFragmentManager(), "datePicker");
+            public void onDataChange(DataSnapshot dataSnapshot) {
 
-            }
-        });
+                NotifyHSEQItem notifyHSEQItem = dataSnapshot.getValue(NotifyHSEQItem.class);
+//                Log.d("MyLOG      ", dataSnapshot.getValue(NotifyHSEQItem.class).toString());
 
+                uid = notifyHSEQItem.getUid();
+                mEditNotifyCurrentTime = notifyHSEQItem.getTimeRegistration();
+                mEditNotifyDate = notifyHSEQItem.getDateHappened();
+                mEditNotifyTime = notifyHSEQItem.getTimeHappened();
+                mEditNotifyAccidentType = notifyHSEQItem.getType();
+                mEditNotifyPlace = notifyHSEQItem.getPlace();
+                mEditNotifyDepartment = notifyHSEQItem.getDepartment();
+                mEditNotifyDescription = notifyHSEQItem.getDescription();
+                mNamePath = notifyHSEQItem.getPhotoPath();
+                mNameFile = notifyHSEQItem.getPhotoName();
+                mNotifyStatus = notifyHSEQItem.getStatus();
+                mNamePerson = notifyHSEQItem.getNamePerson();
+                mEmailPerson = notifyHSEQItem.getEmailPerson();
+                mPhonePerson = notifyHSEQItem.getPhonePerson();
+                mDepartmentPerson = notifyHSEQItem.getDepartmentPerson();
+
+//Date picker
+                editNotifyEditTextDate = (EditText) findViewById(R.id.newNotifyDate);
+                final Button mPickDate = (Button) findViewById(R.id.editNotifyDateButton);
+                mPickDate.setOnClickListener(new View.OnClickListener() {
+
+
+                    @Override
+                    public void onClick(View view) {
+                        DialogFragment newFragment = new DatePickerFragment();
+                        newFragment.show(getSupportFragmentManager(), "datePicker");
+                    }
+                });
 
 // Time picker
-        editNotifyEditTextTime = (EditText) findViewById(R.id.newNotifyTime);
-        final Button mPickTime = (Button) findViewById(R.id.editNotifyTimeButton);
-        mPickTime.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                DialogFragment newFragment = new TimePickerFragment();
-                newFragment.show(getSupportFragmentManager(), "timePicker");
-            }
-        });
+                editNotifyEditTextTime = (EditText) findViewById(R.id.newNotifyTime);
+                final Button mPickTime = (Button) findViewById(R.id.editNotifyTimeButton);
+                mPickTime.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        DialogFragment newFragment = new TimePickerFragment();
+                        newFragment.show(getSupportFragmentManager(), "timePicker");
+                    }
+                });
 
 
 //** Привязка к объектам в отображении
-        editNotifyEditTextDescription = (EditText) findViewById(R.id.editNotifyCurentDescription);
+                editNotifyEditTextDescription = (EditText) findViewById(R.id.editNotifyCurentDescription);
 
 //Spinner for place
-        final Spinner spinnerPlace = (Spinner) findViewById(R.id.editNotifyPlace);
-        // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter<CharSequence> adapterPlace = ArrayAdapter.createFromResource(this,
-                R.array.Place, android.R.layout.simple_spinner_item);
+                final Spinner spinnerPlace = (Spinner) findViewById(R.id.editNotifyPlace);
+                // Create an ArrayAdapter using the string array and a default spinner layout
+                ArrayAdapter<CharSequence> adapterPlace = ArrayAdapter.createFromResource(getBaseContext(),
+                        R.array.Place, android.R.layout.simple_spinner_item);
 // Specify the layout to use when the list of choices appears
-        adapterPlace.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                adapterPlace.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
 
 // Apply the adapter to the spinner
-        spinnerPlace.setAdapter(adapterPlace);
+                spinnerPlace.setAdapter(adapterPlace);
 
 //Spinner for department
-        final Spinner spinnerDepartment = (Spinner) findViewById(R.id.editNotifyDepartment);
-        // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter<CharSequence> adapterDepartment = ArrayAdapter.createFromResource(this,
-                R.array.Department, android.R.layout.simple_spinner_item);
+                final Spinner spinnerDepartment = (Spinner) findViewById(R.id.editNotifyDepartment);
+                // Create an ArrayAdapter using the string array and a default spinner layout
+                ArrayAdapter<CharSequence> adapterDepartment = ArrayAdapter.createFromResource(getBaseContext(),
+                        R.array.Department, android.R.layout.simple_spinner_item);
 // Specify the layout to use when the list of choices appears
-        adapterDepartment.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                adapterDepartment.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 // Apply the adapter to the spinner
-        spinnerDepartment.setAdapter(adapterDepartment);
+                spinnerDepartment.setAdapter(adapterDepartment);
 
 //Spinner for Accident type
-        final Spinner spinnerAccidentType = (Spinner) findViewById(R.id.editNotifyAccidentType);
-        // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter<CharSequence> adapterAccidentType = ArrayAdapter.createFromResource(this,
-                AccidentType, android.R.layout.simple_spinner_item);
+                final Spinner spinnerAccidentType = (Spinner) findViewById(R.id.editNotifyAccidentType);
+                // Create an ArrayAdapter using the string array and a default spinner layout
+                ArrayAdapter<CharSequence> adapterAccidentType = ArrayAdapter.createFromResource(getBaseContext(),
+                        AccidentType, android.R.layout.simple_spinner_item);
 // Specify the layout to use when the list of choices appears
-        adapterAccidentType.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                adapterAccidentType.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 // Apply the adapter to the spinner
-        spinnerAccidentType.setAdapter(adapterAccidentType);
+                spinnerAccidentType.setAdapter(adapterAccidentType);
 
-        Bundle showData = getIntent().getExtras();
-        rowId = showData.getInt("keyid");
-        // Toast.makeText(getApplicationContext(), Integer.toString(rowId),
-        // 500).show();
-//        adapter = new DBAdapter(this);
 
-        //       c = adapter.queryAll(rowId);
-
-        if (c.moveToFirst()) {
-            do {
-                mainNumber = Integer.parseInt(c.getString(0));
-                sync = Integer.parseInt(c.getString(1));
-                mEditNotifyCurrentDate = c.getString(2);
-                mEditNotifyCurrentTime = c.getString(3);
-
-                mEditNotifyDate = c.getString(4);
                 editNotifyEditTextDate.setText(mEditNotifyDate);
-                mEditNotifyTime = c.getString(5);
                 editNotifyEditTextTime.setText(mEditNotifyTime);
-                mEditNotifyAccidentType = c.getString(6);
                 spinnerAccidentType.setSelection(getIndex(spinnerAccidentType, mEditNotifyAccidentType));
-                mEditNotifyPlace = c.getString(7);
                 spinnerPlace.setSelection(getIndex(spinnerPlace, mEditNotifyPlace));
-                mEditNotifyDepartment = c.getString(8);
                 spinnerDepartment.setSelection(getIndex(spinnerDepartment, mEditNotifyDepartment));
-                mEditNotifyDescription = c.getString(9);
                 editNotifyEditTextDescription.setText(mEditNotifyDescription);
-
-                mNamePath = c.getString(10);
-                mNameFile = c.getString(11);
-                mNotifyStatus = Integer.parseInt(c.getString(12));
-                mNamePerson = c.getString(13);
-                mEmailPerson = c.getString(14);
-                mPhonePerson = c.getString(15);
-                mDepartmentPerson = c.getString(16);
-
-            } while (c.moveToNext());
-        }
 
 
 // обработка картинки фото
-        final ImageView buttonTakePhotoOne = (ImageView) findViewById(R.id.takePhotoOne);
+                final ImageView buttonTakePhotoOne = (ImageView) findViewById(R.id.takePhotoOne);
+
+                File imgFile = new File(mNamePath + "/" + mNameFile);
+
+                if (imgFile.exists() && imgFile.isFile()) {
+                    Bitmap bitmapImage = BitmapFactory.decodeFile(mNamePath + "/" + mNameFile);
+                    int nh = (int) (bitmapImage.getHeight() * (512.0 / bitmapImage.getWidth()));
+                    Bitmap scaled = Bitmap.createScaledBitmap(bitmapImage, 512, nh, true);
+                    buttonTakePhotoOne.setImageBitmap(scaled);
+
+                    buttonTakePhotoOne.setOnClickListener(new View.OnClickListener() {
 
 
-        File imgFile = new File(mNamePath + "/" + mNameFile);
-
-        if (imgFile.exists() && imgFile.isFile()) {
-            Bitmap bitmapImage = BitmapFactory.decodeFile(mNamePath + "/" + mNameFile);
-            int nh = (int) (bitmapImage.getHeight() * (512.0 / bitmapImage.getWidth()));
-            Bitmap scaled = Bitmap.createScaledBitmap(bitmapImage, 512, nh, true);
-            buttonTakePhotoOne.setImageBitmap(scaled);
-
-            buttonTakePhotoOne.setOnClickListener(new View.OnClickListener() {
-
-
-                public void onClick(View v) {
-                    //TODO show photo
+                        public void onClick(View v) {
+                            //TODO show photo
 //** делаем фото, сохраняем и вставляем в вид
-                    Intent intentPhoto = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    intentPhoto.putExtra(MediaStore.EXTRA_OUTPUT, generateFileUri(TYPE_PHOTO));
-                    startActivityForResult(intentPhoto, REQUEST_CODE_PHOTO);
+                            Intent intentPhoto = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                            intentPhoto.putExtra(MediaStore.EXTRA_OUTPUT, generateFileUri(TYPE_PHOTO));
+                            startActivityForResult(intentPhoto, REQUEST_CODE_PHOTO);
 
 
-                }
-            });
-        } else {
+                        }
+                    });
+                } else {
 
-            buttonTakePhotoOne.setOnClickListener(new View.OnClickListener() {
+                    buttonTakePhotoOne.setOnClickListener(new View.OnClickListener() {
 
 
-                public void onClick(View v) {
-                    //TODO show photo
+                        public void onClick(View v) {
+                            //TODO show photo
 //** делаем фото, сохраняем и вставляем в вид
-                    Intent intentPhoto = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    intentPhoto.putExtra(MediaStore.EXTRA_OUTPUT, generateFileUri(TYPE_PHOTO));
-                    startActivityForResult(intentPhoto, REQUEST_CODE_PHOTO);
+                            Intent intentPhoto = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                            intentPhoto.putExtra(MediaStore.EXTRA_OUTPUT, generateFileUri(TYPE_PHOTO));
+                            startActivityForResult(intentPhoto, REQUEST_CODE_PHOTO);
 
+                        }
+                    });
                 }
-            });
-        }
-
-//загрузка данных из вызванной ячейки
-
-
 
 //update button - listener
-        final Button buttonUpdateNotify = (Button) findViewById(R.id.updateNotifyButton);
-        buttonUpdateNotify.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
+                final Button buttonUpdateNotify = (Button) findViewById(R.id.updateNotifyButton);
+                buttonUpdateNotify.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View v) {
 
-                //update info to database Notify
+                        //update info to database Notify
 
 //**Получение данных из заполненных полей
-                mEditNotifyDate = editNotifyEditTextDate.getText().toString();
-                mEditNotifyTime = editNotifyEditTextTime.getText().toString();
-                mEditNotifyAccidentType = spinnerAccidentType.getSelectedItem().toString();
-                mEditNotifyPlace = spinnerPlace.getSelectedItem().toString();
-                mEditNotifyDepartment = spinnerDepartment.getSelectedItem().toString();
-                mEditNotifyDescription = editNotifyEditTextDescription.getText().toString();
-                sync = 0;
+                        mEditNotifyDate = editNotifyEditTextDate.getText().toString();
+                        mEditNotifyTime = editNotifyEditTextTime.getText().toString();
+                        mEditNotifyAccidentType = spinnerAccidentType.getSelectedItem().toString();
+                        mEditNotifyPlace = spinnerPlace.getSelectedItem().toString();
+                        mEditNotifyDepartment = spinnerDepartment.getSelectedItem().toString();
+                        mEditNotifyDescription = editNotifyEditTextDescription.getText().toString();
 
 
-                finish();
-                // going back to MainActivity
-                Intent activityChangeIntent = new Intent(NotifyEditActivity.this, MainActivity.class);
-                // currentContext.startActivity(activityChangeIntent);
-                NotifyEditActivity.this.startActivity(activityChangeIntent);
+                        //TODO update firebase function
+                        NotifyHSEQItem notifyHSEQItem = new NotifyHSEQItem(
+                                uid, mEditNotifyCurrentTime, mEditNotifyDate, mEditNotifyTime, mEditNotifyAccidentType,
+                                mEditNotifyPlace, mEditNotifyDepartment, mEditNotifyDescription, mNamePath, mNameFile,
+                                mNotifyStatus, mNamePerson, mEmailPerson, mPhonePerson, mDepartmentPerson);
+
+                        mNotifyDatabaseReference.setValue(notifyHSEQItem);
+
+                        Intent activityChangeIntent = new Intent(NotifyEditActivity.this, MainActivity.class);
+                        NotifyEditActivity.this.startActivity(activityChangeIntent);
+                    }
+                });
+
             }
+
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+
         });
 
     }
-
-
-
 
     //get place for text in spinner
     private int getIndex(Spinner spinner, String myString) {

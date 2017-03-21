@@ -1,15 +1,12 @@
 package ua.com.hse.notifyhseq;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,10 +14,15 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 import java.io.File;
 
 public class NotifyShowActivity extends AppCompatActivity {
-
 
     // Storage Permissions
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
@@ -28,10 +30,9 @@ public class NotifyShowActivity extends AppCompatActivity {
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
-
-
-    int mainNumber;
-    int sync;
+    FirebaseDatabase mFirebaseDatabase;
+    DatabaseReference mNotifyDatabaseReference;
+    int uid;
     String mEditNotifyDate;
     String mEditNotifyTime;
     String mEditNotifyCurrentDate;
@@ -40,144 +41,132 @@ public class NotifyShowActivity extends AppCompatActivity {
     String mEditNotifyDepartment;
     String mEditNotifyAccidentType;
     String mEditNotifyDescription;
-
     int mNotifyStatus;
     String mNamePerson;
     String mEmailPerson;
     String mPhonePerson;
     String mDepartmentPerson;
 
-
     // Для фото переменные
     String mNameFile, mNamePath;
     // for database
-    //   DBAdapter adapter;
+    String key;
 
-    //NotifyOpenHelper openHelper;
-    int rowId;
-    Cursor c;
-    Button editButton, deleteButton;
-    String requestBody;
+
+    Button deleteButton;
 
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notify_show);
-        // actualise database
-        //       adapter = new DBAdapter(this);
 
-        Bundle showData = getIntent().getExtras();
-        rowId = showData.getInt("keyid");
-        // Toast.makeText(getApplicationContext(), Integer.toString(rowId),
-        // 500).show();
-//        adapter = new DBAdapter(this);
+        Intent intent = getIntent();
+        key = intent.getExtras().getString("key");
+        Log.d("MyLOG     ", key);
 
-//        c = adapter.queryAll(rowId);
+        mFirebaseDatabase = FirebaseDatabase.getInstance();
+        mNotifyDatabaseReference = mFirebaseDatabase.getReference().child("notifyHSEQ").child(key);
 
-        if (c.moveToFirst()) {
-            do {
-                mainNumber = Integer.parseInt(c.getString(0));
-                sync = Integer.parseInt(c.getString(1));
-                mEditNotifyCurrentDate = c.getString(2);
-                mEditNotifyCurrentTime = c.getString(3);
+        mNotifyDatabaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
 
-                mEditNotifyDate = c.getString(4);
+                final NotifyHSEQItem notifyHSEQItem = dataSnapshot.getValue(NotifyHSEQItem.class);
 
-                mEditNotifyTime = c.getString(5);
 
-                mEditNotifyAccidentType = c.getString(6);
-                mEditNotifyPlace = c.getString(7);
-                mEditNotifyDepartment = c.getString(8);
+                uid = notifyHSEQItem.getUid();
+                mEditNotifyCurrentTime = notifyHSEQItem.getTimeRegistration();
+                mEditNotifyDate = notifyHSEQItem.getDateHappened();
+                mEditNotifyTime = notifyHSEQItem.getTimeHappened();
+                mEditNotifyAccidentType = notifyHSEQItem.getType();
+                mEditNotifyPlace = notifyHSEQItem.getPlace();
+                mEditNotifyDepartment = notifyHSEQItem.getDepartment();
+                mEditNotifyDescription = notifyHSEQItem.getDescription();
+                mNamePath = notifyHSEQItem.getPhotoPath();
+                mNameFile = notifyHSEQItem.getPhotoName();
+                mNotifyStatus = notifyHSEQItem.getStatus();
+                mNamePerson = notifyHSEQItem.getNamePerson();
+                mEmailPerson = notifyHSEQItem.getEmailPerson();
+                mPhonePerson = notifyHSEQItem.getPhonePerson();
+                mDepartmentPerson = notifyHSEQItem.getDepartmentPerson();
 
-                mEditNotifyDescription = c.getString(9);
-                mNamePath = c.getString(10);
-                mNameFile = c.getString(11);
-                mNotifyStatus = Integer.parseInt(c.getString(12));
-                mNamePerson = c.getString(13);
-                mEmailPerson = c.getString(14);
-                mPhonePerson = c.getString(15);
-                mDepartmentPerson = c.getString(16);
+                // do your stuff here with value
 
-            } while (c.moveToNext());
-        }
-        TextView notifyDateTimeRegistered = (TextView) findViewById(R.id.NotifyDateTimeRegistered);
-        notifyDateTimeRegistered.setText(mEditNotifyCurrentDate + " " + mEditNotifyCurrentTime);
+                TextView notifyDateTimeRegistered = (TextView) findViewById(R.id.NotifyDateTimeRegistered);
+                notifyDateTimeRegistered.setText(mEditNotifyCurrentDate + " " + mEditNotifyCurrentTime);
 
-        TextView notifyDateTimeHappened = (TextView) findViewById(R.id.NotifyDateTimeHappened);
-        notifyDateTimeHappened.setText(mEditNotifyDate + " " + mEditNotifyTime);
+                TextView notifyDateTimeHappened = (TextView) findViewById(R.id.NotifyDateTimeHappened);
+                notifyDateTimeHappened.setText(mEditNotifyDate + " " + mEditNotifyTime);
 
-        TextView notifyAccidentType = (TextView) findViewById(R.id.NotifyAccidentType);
-        notifyAccidentType.setText(mEditNotifyAccidentType);
+                TextView notifyAccidentType = (TextView) findViewById(R.id.NotifyAccidentType);
+                notifyAccidentType.setText(mEditNotifyAccidentType);
 
-        TextView notifyPlace = (TextView) findViewById(R.id.NotifyPlace);
-        notifyPlace.setText(mEditNotifyPlace);
+                TextView notifyPlace = (TextView) findViewById(R.id.NotifyPlace);
+                notifyPlace.setText(mEditNotifyPlace);
 
-        TextView notifyDepartment = (TextView) findViewById(R.id.NotifyDepartment);
-        notifyDepartment.setText(mEditNotifyDepartment);
+                TextView notifyDepartment = (TextView) findViewById(R.id.NotifyDepartment);
+                notifyDepartment.setText(mEditNotifyDepartment);
 
-        TextView notifyDescription = (TextView) findViewById(R.id.NotifyDescription);
-        notifyDescription.setText(mEditNotifyDescription);
+                TextView notifyDescription = (TextView) findViewById(R.id.NotifyDescription);
+                notifyDescription.setText(mEditNotifyDescription);
 
 
 // обработка картинки фото
-        final ImageView takePicture = (ImageView) findViewById(R.id.takePicture);
-        File imgFile = new File(mNamePath + "/" + mNameFile);
+                final ImageView takePicture = (ImageView) findViewById(R.id.takePicture);
+                File imgFile = new File(mNamePath + "/" + mNameFile);
 
-        if (imgFile.exists() && imgFile.isFile()) {
-            Bitmap bitmapImage = BitmapFactory.decodeFile(mNamePath + "/" + mNameFile);
-            int nh = (int) (bitmapImage.getHeight() * (512.0 / bitmapImage.getWidth()));
-            Bitmap scaled = Bitmap.createScaledBitmap(bitmapImage, 512, nh, true);
-            takePicture.setImageBitmap(scaled);
+                if (imgFile.exists() && imgFile.isFile()) {
+                    Bitmap bitmapImage = BitmapFactory.decodeFile(mNamePath + "/" + mNameFile);
+                    int nh = (int) (bitmapImage.getHeight() * (512.0 / bitmapImage.getWidth()));
+                    Bitmap scaled = Bitmap.createScaledBitmap(bitmapImage, 512, nh, true);
+                    takePicture.setImageBitmap(scaled);
 
-            takePicture.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    //TODO show photo
+                    takePicture.setOnClickListener(new View.OnClickListener() {
+                        public void onClick(View v) {
+                            //TODO show photo
+
+                        }
+                    });
+                } else {
 
                 }
-            });
-        } else {
-
-        }
 
 
 //update button - listener
-        final Button buttonUpdateNotify = (Button) findViewById(R.id.editNotifyButton);
-        buttonUpdateNotify.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
+                final Button buttonUpdateNotify = (Button) findViewById(R.id.editNotifyButton);
+                buttonUpdateNotify.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View v) {
 
-                Bundle passdata = new Bundle();
-                int nameId = rowId;
-                passdata.putInt("keyid", nameId);
-                Intent passIntent = new Intent(NotifyShowActivity.this,
-                        NotifyEditActivity.class);
-                passIntent.putExtras(passdata);
-                startActivity(passIntent);
-
-
-            }
-        });
+                        Intent intent = new Intent(NotifyShowActivity.this, NotifyEditActivity.class);
+                        intent.putExtra("key", key);
+                        startActivity(intent);
+                    }
+                });
 
 // delete button
-        deleteButton = (Button) findViewById(R.id.deleteNotifyButton);
-        deleteButton.setOnClickListener(new View.OnClickListener() {
+                deleteButton = (Button) findViewById(R.id.deleteNotifyButton);
+                deleteButton.setOnClickListener(new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View v) {
+                        // TODO Are you sure window?
+
+                        mNotifyDatabaseReference.removeValue();
+
+                        // going back to MainActivity
+                        Intent activityChangeIntent = new Intent(NotifyShowActivity.this, MainActivity.class);
+                        // currentContext.startActivity(activityChangeIntent);
+                        NotifyShowActivity.this.startActivity(activityChangeIntent);
+                    }
+                });
+            }
 
             @Override
-            public void onClick(View v) {
-                // TODO Are you sure window?
+            public void onCancelled(DatabaseError databaseError) {
 
-//                adapter.deleteOneRecord(rowId);
-
-//delete from app server
-
-
-                finish();
-                // going back to MainActivity
-                Intent activityChangeIntent = new Intent(NotifyShowActivity.this, MainActivity.class);
-                // currentContext.startActivity(activityChangeIntent);
-                NotifyShowActivity.this.startActivity(activityChangeIntent);
             }
-        });
 
+        });
 
     }
 
@@ -190,7 +179,6 @@ public class NotifyShowActivity extends AppCompatActivity {
         return true;
     }
 
-//
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -207,11 +195,11 @@ public class NotifyShowActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public boolean checkNetworkConnection() {
-        ConnectivityManager connectivityManager = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-        return (networkInfo != null && networkInfo.isConnected());
-    }
+//    public boolean checkNetworkConnection() {
+//        ConnectivityManager connectivityManager = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
+//        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+//        return (networkInfo != null && networkInfo.isConnected());
+//    }
 
 
 }
