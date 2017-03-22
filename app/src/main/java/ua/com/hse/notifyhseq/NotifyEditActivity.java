@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
@@ -22,12 +23,24 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.firebase.ui.storage.images.FirebaseImageLoader;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnPausedListener;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageMetadata;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.StorageTask;
+import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
 
@@ -35,6 +48,8 @@ import ua.com.hse.notifyhseq.pickers.DatePickerFragment;
 import ua.com.hse.notifyhseq.pickers.TimePickerFragment;
 
 import static ua.com.hse.notifyhseq.R.array.AccidentType;
+import static ua.com.hse.notifyhseq.R.id.takePhotoOne;
+import static ua.com.hse.notifyhseq.R.id.takePicture;
 
 public class NotifyEditActivity extends AppCompatActivity {
 
@@ -72,6 +87,9 @@ public class NotifyEditActivity extends AppCompatActivity {
 
     FirebaseDatabase mFirebaseDatabase;
     DatabaseReference mNotifyDatabaseReference;
+    FirebaseStorage firebaseStorage;
+    StorageReference storageReference, storageReferenceNew;
+    UploadTask uploadTask;
 
     String key;
 
@@ -110,6 +128,9 @@ public class NotifyEditActivity extends AppCompatActivity {
 
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         mNotifyDatabaseReference = mFirebaseDatabase.getReference().child("notifyHSEQ").child(key);
+        firebaseStorage = FirebaseStorage.getInstance();
+        storageReference = firebaseStorage.getReference();
+        storageReferenceNew = firebaseStorage.getReference();
 
         mNotifyDatabaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -133,6 +154,11 @@ public class NotifyEditActivity extends AppCompatActivity {
                 mEmailPerson = notifyHSEQItem.getEmailPerson();
                 mPhonePerson = notifyHSEQItem.getPhonePerson();
                 mDepartmentPerson = notifyHSEQItem.getDepartmentPerson();
+
+                mNameFileNew = mNameFile;
+                mNamePathNew = mNamePath;
+
+//TODO button delete image
 
 //Date picker
                 editNotifyEditTextDate = (EditText) findViewById(R.id.newNotifyDate);
@@ -206,49 +232,39 @@ public class NotifyEditActivity extends AppCompatActivity {
 // обработка картинки фото
                 final ImageView buttonTakePhotoOne = (ImageView) findViewById(R.id.takePhotoOne);
 
-                File imgFile = new File(mNamePath + "/" + mNameFile);
+                if (!mNameFile.equals("")) {
+                    storageReference = firebaseStorage.getReference().child("images").child(mNameFile);
 
-                if (imgFile.exists() && imgFile.isFile()) {
-                    Bitmap bitmapImage = BitmapFactory.decodeFile(mNamePath + "/" + mNameFile);
-                    int nh = (int) (bitmapImage.getHeight() * (512.0 / bitmapImage.getWidth()));
-                    Bitmap scaled = Bitmap.createScaledBitmap(bitmapImage, 512, nh, true);
-                    buttonTakePhotoOne.setImageBitmap(scaled);
-
-                    buttonTakePhotoOne.setOnClickListener(new View.OnClickListener() {
-
-
-                        public void onClick(View v) {
-                            //TODO show photo
-//** делаем фото, сохраняем и вставляем в вид
-                            Intent intentPhoto = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                            intentPhoto.putExtra(MediaStore.EXTRA_OUTPUT, generateFileUri(TYPE_PHOTO));
-                            startActivityForResult(intentPhoto, REQUEST_CODE_PHOTO);
-
-
-                        }
-                    });
-                } else {
-
-                    buttonTakePhotoOne.setOnClickListener(new View.OnClickListener() {
-
-
-                        public void onClick(View v) {
-                            //TODO show photo
-//** делаем фото, сохраняем и вставляем в вид
-                            Intent intentPhoto = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                            intentPhoto.putExtra(MediaStore.EXTRA_OUTPUT, generateFileUri(TYPE_PHOTO));
-                            startActivityForResult(intentPhoto, REQUEST_CODE_PHOTO);
-
-                        }
-                    });
+                    Glide.with(getApplicationContext() /* context */)
+                            .using(new FirebaseImageLoader())
+                            .load(storageReference)
+                            .into(buttonTakePhotoOne);
                 }
+
+
+//                File imgFile = new File(mNamePath + "/" + mNameFile);
+
+
+                    buttonTakePhotoOne.setOnClickListener(new View.OnClickListener() {
+
+
+                        public void onClick(View v) {
+
+//** делаем фото, сохраняем и вставляем в вид
+                            Intent intentPhoto = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                            intentPhoto.putExtra(MediaStore.EXTRA_OUTPUT, generateFileUri(TYPE_PHOTO));
+                            startActivityForResult(intentPhoto, REQUEST_CODE_PHOTO);
+//TODO insert image to viewimage
+
+                        }
+                    });
+
+
 
 //update button - listener
                 final Button buttonUpdateNotify = (Button) findViewById(R.id.updateNotifyButton);
                 buttonUpdateNotify.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
-
-                        //update info to database Notify
 
 //**Получение данных из заполненных полей
                         mEditNotifyDate = editNotifyEditTextDate.getText().toString();
@@ -262,10 +278,64 @@ public class NotifyEditActivity extends AppCompatActivity {
                         //TODO update firebase function
                         NotifyHSEQItem notifyHSEQItem = new NotifyHSEQItem(
                                 uid, mEditNotifyCurrentTime, mEditNotifyDate, mEditNotifyTime, mEditNotifyAccidentType,
-                                mEditNotifyPlace, mEditNotifyDepartment, mEditNotifyDescription, mNamePath, mNameFile,
+                                mEditNotifyPlace, mEditNotifyDepartment, mEditNotifyDescription, mNamePathNew, mNameFileNew,
                                 mNotifyStatus, mNamePerson, mEmailPerson, mPhonePerson, mDepartmentPerson);
 
                         mNotifyDatabaseReference.setValue(notifyHSEQItem);
+
+
+//TODO upload image after cheking of changes
+                        if (!mNameFileNew.equals(mNameFile)) {
+
+                            Uri file = Uri.fromFile(new File(mNamePathNew + "/" + mNameFileNew));
+
+                            //delete ol file
+                            storageReference.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+                                    // File deleted successfully
+                                }
+                            }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception exception) {
+                                    // Uh-oh, an error occurred!
+                                }
+                            });
+// Create the file metadata
+                            StorageMetadata metadata = new StorageMetadata.Builder()
+                                    .setContentType("image/jpeg")
+                                    .build();
+
+// Upload file and metadata
+                            uploadTask = storageReferenceNew.child("images/" + file.getLastPathSegment()).putFile(file, metadata);
+
+// Listen for state changes, errors, and completion of the upload.
+                            StorageTask<UploadTask.TaskSnapshot> taskSnapshotStorageTask = uploadTask.addOnProgressListener
+                                    (new OnProgressListener<UploadTask.TaskSnapshot>() {
+                                        @Override
+                                        public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                                            double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                                            Toast.makeText(getApplicationContext(), "Upload is " + progress + "% done", Toast.LENGTH_SHORT).show(); //TODO good view of uploading file
+                                        }
+                                    }).addOnPausedListener(new OnPausedListener<UploadTask.TaskSnapshot>() {
+                                @Override
+                                public void onPaused(UploadTask.TaskSnapshot taskSnapshot) {
+                                    System.out.println("Upload is paused");
+                                }
+                            }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception exception) {
+                                    // Handle unsuccessful uploads
+                                }
+                            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                @Override
+                                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                    // Handle successful uploads on complete
+//                        Uri downloadUrl = taskSnapshot.getMetadata().getDownloadUrl();
+                                }
+                            });
+
+                        }
 
                         Intent activityChangeIntent = new Intent(NotifyEditActivity.this, MainActivity.class);
                         NotifyEditActivity.this.startActivity(activityChangeIntent);
@@ -325,13 +395,13 @@ public class NotifyEditActivity extends AppCompatActivity {
     }
 
     private Uri generateFileUri(int type) {
-        File file = null;
+        File newFile = null;
         mNameFileNew = "photo_" + System.currentTimeMillis() + ".jpg";
         mNamePathNew = directory.getPath();
-        file = new File(mNamePathNew + "/" + mNameFileNew);
+        newFile = new File(mNamePathNew + "/" + mNameFileNew);
 
-        Log.d(TAG, "fileName = " + file);
-        return Uri.fromFile(file);
+        Log.d(TAG, "fileName = " + newFile);
+        return Uri.fromFile(newFile);
     }
 
     private void createDirectory() {

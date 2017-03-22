@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
@@ -21,9 +22,21 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.firebase.ui.storage.images.FirebaseImageLoader;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnPausedListener;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageMetadata;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.StorageTask;
+import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
 import java.text.DateFormat;
@@ -40,6 +53,9 @@ import ua.com.hse.notifyhseq.pickers.TimePickerFragment;
 import static ua.com.hse.notifyhseq.R.id.newNotifyAccidentType;
 import static ua.com.hse.notifyhseq.R.id.newNotifyDepartment;
 import static ua.com.hse.notifyhseq.R.id.newNotifyPlace;
+import static ua.com.hse.notifyhseq.R.id.takePicture;
+
+;
 
 public class NotifyNewActivity extends AppCompatActivity {
 
@@ -76,6 +92,9 @@ public class NotifyNewActivity extends AppCompatActivity {
     // Firebase database
     FirebaseDatabase mFirebaseDatabase;
     DatabaseReference myRef;
+    FirebaseStorage firebaseStorage;
+    StorageReference storageReference;
+    UploadTask uploadTask;
 
     /**
      * Checks if the app has permission to write to device storage
@@ -107,6 +126,9 @@ public class NotifyNewActivity extends AppCompatActivity {
 
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         myRef = mFirebaseDatabase.getReference("notifyHSEQ");
+        firebaseStorage = FirebaseStorage.getInstance();
+        storageReference = firebaseStorage.getReference();
+
 
 
 //** Получение текущей даты и времени из системы
@@ -211,6 +233,62 @@ public class NotifyNewActivity extends AppCompatActivity {
                         mNotifyStatus, mNamePerson, mEmailPerson, mPhonePerson, mDepartmentPerson);
                 myRef.push().setValue(notifyHSEQItem);
 
+                //send file to cloud
+                Uri file = Uri.fromFile(new File(mPhotoPath + "/" + mPhotoNameFile));
+
+
+// Create the file metadata
+                StorageMetadata metadata = new StorageMetadata.Builder()
+                        .setContentType("image/jpeg")
+                        .build();
+
+// Upload file and metadata to the path 'images/mountains.jpg'
+                uploadTask = storageReference.child("images/" + file.getLastPathSegment()).putFile(file, metadata);
+
+// Listen for state changes, errors, and completion of the upload.
+                StorageTask<UploadTask.TaskSnapshot> taskSnapshotStorageTask = uploadTask.addOnProgressListener
+                        (new OnProgressListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                                double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                                Toast.makeText(getApplicationContext(), "Upload is " + progress + "% done", Toast.LENGTH_SHORT).show(); //TODO good view of uploading file
+                            }
+                        }).addOnPausedListener(new OnPausedListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onPaused(UploadTask.TaskSnapshot taskSnapshot) {
+                        System.out.println("Upload is paused");
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        // Handle unsuccessful uploads
+                    }
+                }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        // Handle successful uploads on complete
+//                        Uri downloadUrl = taskSnapshot.getMetadata().getDownloadUrl();
+                    }
+                });
+
+
+//                uploadTask = storageRef.putFile(file);
+//
+//// Register observers to listen for when the download is done or if it fails
+//                uploadTask.addOnFailureListener(new OnFailureListener() {
+//                    @Override
+//                    public void onFailure(@NonNull Exception exception) {
+//                        // Handle unsuccessful uploads
+//                    }
+//                }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+//                    @Override
+//                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+//                        Toast.makeText(getApplicationContext(), "Image uploaded to Server", Toast.LENGTH_SHORT ).show();
+//                        // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
+// //                       Uri downloadUrl = taskSnapshot.getDownloadUrl();
+//                    }
+//                });
+
 
                 // going back to MainActivity
                 Intent activityChangeIntent = new Intent(NotifyNewActivity.this, MainActivity.class);
@@ -256,7 +334,7 @@ public class NotifyNewActivity extends AppCompatActivity {
                 Mail.MailBuilder builder = new Mail.MailBuilder();
                 Mail mail;
 
-                if (mPhotoNameFile == "") {
+                if (mPhotoNameFile.equals("")) {
                     mail = builder
                             .setSender("soldiez111@gmail.com")
                             .addRecipient(new Recipient("soldiez@yandex.ru"))
@@ -310,6 +388,16 @@ public class NotifyNewActivity extends AppCompatActivity {
                 Intent intentPhoto = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 intentPhoto.putExtra(MediaStore.EXTRA_OUTPUT, generateFileUri(TYPE_PHOTO));
                 startActivityForResult(intentPhoto, REQUEST_CODE_PHOTO);
+                File file = new File(mPhotoPath + "/" + mPhotoNameFile);
+//TODO insert image to imageview
+                Glide.with(getApplicationContext() /* context */)
+
+                        .load(file.toString())
+                        .into(buttonTakePhotoOne);
+
+
+                //               Bitmap bitmap = (Bitmap) file;
+                //               buttonTakePhotoOne.setImageBitmap(Bitmap.file);
             }
         });
     }

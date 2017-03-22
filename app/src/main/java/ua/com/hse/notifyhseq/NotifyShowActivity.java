@@ -2,9 +2,8 @@ package ua.com.hse.notifyhseq;
 
 import android.Manifest;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -14,13 +13,17 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.firebase.ui.storage.images.FirebaseImageLoader;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-
-import java.io.File;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 public class NotifyShowActivity extends AppCompatActivity {
 
@@ -32,6 +35,11 @@ public class NotifyShowActivity extends AppCompatActivity {
     };
     FirebaseDatabase mFirebaseDatabase;
     DatabaseReference mNotifyDatabaseReference;
+    FirebaseStorage firebaseStorage;
+    StorageReference storageReference;
+
+
+
     int uid;
     String mEditNotifyDate;
     String mEditNotifyTime;
@@ -66,12 +74,15 @@ public class NotifyShowActivity extends AppCompatActivity {
 
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         mNotifyDatabaseReference = mFirebaseDatabase.getReference().child("notifyHSEQ").child(key);
+        firebaseStorage = FirebaseStorage.getInstance();
+        storageReference = firebaseStorage.getReference();
 
         mNotifyDatabaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
 
                 final NotifyHSEQItem notifyHSEQItem = dataSnapshot.getValue(NotifyHSEQItem.class);
+
 
 
                 uid = notifyHSEQItem.getUid();
@@ -111,25 +122,33 @@ public class NotifyShowActivity extends AppCompatActivity {
                 notifyDescription.setText(mEditNotifyDescription);
 
 
-// обработка картинки фото
                 final ImageView takePicture = (ImageView) findViewById(R.id.takePicture);
-                File imgFile = new File(mNamePath + "/" + mNameFile);
+// обработка картинки фото
 
-                if (imgFile.exists() && imgFile.isFile()) {
-                    Bitmap bitmapImage = BitmapFactory.decodeFile(mNamePath + "/" + mNameFile);
-                    int nh = (int) (bitmapImage.getHeight() * (512.0 / bitmapImage.getWidth()));
-                    Bitmap scaled = Bitmap.createScaledBitmap(bitmapImage, 512, nh, true);
-                    takePicture.setImageBitmap(scaled);
+                if (!mNameFile.equals("")) {
+                    storageReference = firebaseStorage.getReference().child("images").child(mNameFile);
 
+                    Glide.with(getApplicationContext() /* context */)
+                            .using(new FirebaseImageLoader())
+                            .load(storageReference)
+                            .into(takePicture);
+                }
+
+//                File imgFile = new File(mNamePath + "/" + mNameFile);
+
+//                if (imgFile.exists() && imgFile.isFile()) {
+//                    Bitmap bitmapImage = BitmapFactory.decodeFile(mNamePath + "/" + mNameFile);
+//                    int nh = (int) (bitmapImage.getHeight() * (512.0 / bitmapImage.getWidth()));
+//                    Bitmap scaled = Bitmap.createScaledBitmap(bitmapImage, 512, nh, true);
+//                    takePicture.setImageBitmap(scaled);
+//
                     takePicture.setOnClickListener(new View.OnClickListener() {
                         public void onClick(View v) {
-                            //TODO show photo
+                            //TODO show photo to full screen
 
                         }
                     });
-                } else {
 
-                }
 
 
 //update button - listener
@@ -151,7 +170,22 @@ public class NotifyShowActivity extends AppCompatActivity {
                     public void onClick(View v) {
                         // TODO Are you sure window?
 
+
                         mNotifyDatabaseReference.removeValue();
+
+// Delete the file
+                        storageReference.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                // File deleted successfully
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception exception) {
+                                // Uh-oh, an error occurred!
+                            }
+                        });
+
 
                         // going back to MainActivity
                         Intent activityChangeIntent = new Intent(NotifyShowActivity.this, MainActivity.class);
