@@ -6,34 +6,66 @@
     android:id="@+id/activity_notify_edit"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/cardview_light_background"
+
     android:fitsSystemWindows="true">
 
     <android.support.v4.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:elevation="2dp"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/activity_vertical_margin"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@color/cardview_light_background"
+            android:elevation="2dp"
             android:orientation="vertical"
-            android:paddingBottom="@dimen/activity_vertical_margin"
-            android:paddingLeft="@dimen/activity_horizontal_margin"
-            android:paddingRight="@dimen/activity_horizontal_margin"
-            android:paddingTop="@dimen/activity_vertical_margin"
-
+            android:paddingBottom="8dp"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:paddingTop="8dp"
             >
 
             <ImageView
                 android:id="@+id/takePicture"
                 android:layout_width="match_parent"
-                android:layout_height="80pt"
+                android:layout_height="40pt"
+                android:layout_marginBottom="8dp"
                 android:adjustViewBounds="true"
+                android:background="@color/cardview_light_background"
+                android:elevation="4dp"
                 android:paddingBottom="8dp"
-                android:scaleType="centerCrop"
-                app:srcCompat="@android:drawable/ic_menu_camera" />
+                android:scaleType="fitCenter"
+                app:srcCompat="@drawable/ic_photo_camera_black_24dp" />
 
-            <LinearLayout
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingBottom="8dp"
+                android:paddingTop="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/New_notify_AcidentType" />
+
+
+                <TextView
+                    android:id="@+id/NotifyAccidentType"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="96dp"
+                    android:textStyle="bold" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
 
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -50,13 +82,13 @@
                     android:id="@+id/NotifyDateTimeRegistered"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/activity_horizontal_margin"
-                    android:gravity="start" />
+                    android:layout_marginLeft="96dp"
+                    android:gravity="start"
+                    android:textStyle="bold" />
 
-            </LinearLayout>
+            </RelativeLayout>
 
-            <LinearLayout
-
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -72,12 +104,13 @@
                     android:id="@+id/NotifyDateTimeHappened"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/activity_horizontal_margin"
-                    android:gravity="start" />
+                    android:layout_marginLeft="96dp"
+                    android:gravity="start"
+                    android:textStyle="bold" />
 
-            </LinearLayout>
+            </RelativeLayout>
 
-            <LinearLayout
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -93,12 +126,13 @@
                     android:id="@+id/NotifyPlace"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/activity_horizontal_margin"
-                    android:gravity="start" />
+                    android:layout_marginLeft="96dp"
+                    android:gravity="start"
+                    android:textStyle="bold" />
 
-            </LinearLayout>
+            </RelativeLayout>
 
-            <LinearLayout
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -114,34 +148,17 @@
                     android:id="@+id/NotifyDepartment"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/activity_horizontal_margin"
-                    android:gravity="start" />
+                    android:layout_marginLeft="96dp"
+                    android:gravity="start"
+                    android:textStyle="bold" />
 
-            </LinearLayout>
+            </RelativeLayout>
 
-            <LinearLayout
+
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:paddingBottom="8dp"
-                android:paddingTop="8dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/New_notify_AcidentType" />
-
-                <TextView
-                    android:id="@+id/NotifyAccidentType"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
                 android:paddingBottom="8dp"
                 android:paddingTop="8dp">
 
@@ -154,10 +171,18 @@
                     android:id="@+id/NotifyDescription"
                     android:layout_width="match_parent"
                     android:layout_height="50pt"
-                    android:gravity="top" />
+                    android:layout_marginLeft="96dp"
+                    android:gravity="top"
+                    android:textStyle="bold" />
 
-            </LinearLayout>
+            </RelativeLayout>
 
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginBottom="8dp"
+                android:background="@android:color/darker_gray"
+                android:paddingTop="8dp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -166,16 +191,16 @@
 
                 <Button
                     android:id="@+id/editNotifyButton"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="0.5"
+                    android:layout_marginRight="8dp"
                     android:text="@string/edit_notify" />
 
                 <Button
                     android:id="@+id/deleteNotifyButton"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="0.5"
+
                     android:text="@string/Delete_Notify" />
 
             </LinearLayout>

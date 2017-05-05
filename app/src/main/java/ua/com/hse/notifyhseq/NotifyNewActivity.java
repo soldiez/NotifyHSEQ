@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -24,8 +25,6 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
-import com.firebase.ui.storage.images.FirebaseImageLoader;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DatabaseReference;
@@ -39,9 +38,11 @@ import com.google.firebase.storage.StorageTask;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
-import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 
 import ua.com.hse.notifyhseq.mail.Attachment;
 import ua.com.hse.notifyhseq.mail.Mail;
@@ -53,9 +54,8 @@ import ua.com.hse.notifyhseq.pickers.TimePickerFragment;
 import static ua.com.hse.notifyhseq.R.id.newNotifyAccidentType;
 import static ua.com.hse.notifyhseq.R.id.newNotifyDepartment;
 import static ua.com.hse.notifyhseq.R.id.newNotifyPlace;
-import static ua.com.hse.notifyhseq.R.id.takePicture;
 
-;
+
 
 public class NotifyNewActivity extends AppCompatActivity {
 
@@ -69,22 +69,24 @@ public class NotifyNewActivity extends AppCompatActivity {
     final int REQUEST_CODE_PHOTO = 1;
     final String TAG = "myLogs";
     int uid = 1;
-    String mNewNotifyDate;
-    String mNewNotifyTime;
-    String mNewNotifyCurrentTime;
+    Long mNewNotifyCurrentTime;
+    Long mNewNotifyTime;
     String mNewNotifyPlace;
     String mNewNotifyDepartment;
     String mNewNotifyAccidentType;
     String mNewNotifyDescription;
     String mPhotoPath = "";
     String mPhotoNameFile = "";
+    String mPhotoNameFileCamera = "";
     int mNotifyStatus = 0;
-    String mNamePerson = "Alex";
-    String mEmailPerson = "soldiez@yandex.ru";
+    String mNamePerson = MainActivity.mUserName;
+    String mEmailPerson = MainActivity.mUserEmail;
     String mPhonePerson = "0504223846";
     String mDepartmentPerson = "Deprt";
-
-    EditText newNotifyEditTextDate, newNotifyEditTextTime, newNotifyEditTextDescription;
+    ArrayList<String> arrayDepartment = MainActivity.arrayDepartments;
+    ArrayList<String> arrayPlace = MainActivity.arrayPlaces;
+    EditText newNotifyEditTextDate, newNotifyEditTextTime;
+    EditText newNotifyEditTextDescription;
     // Для фото переменные
     File directory;
 
@@ -119,8 +121,10 @@ public class NotifyNewActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notify_new);
-//Проверка необходимых разрешений
+
+        //Проверка необходимых разрешений
         verifyStoragePermissions(this);
+
         //Создание директории (если ее нет)
         createDirectory();
 
@@ -132,34 +136,37 @@ public class NotifyNewActivity extends AppCompatActivity {
 
 
 //** Получение текущей даты и времени из системы
-        Calendar c = Calendar.getInstance();
-        int day = c.get(Calendar.DAY_OF_MONTH);
-        int month = c.get(Calendar.MONTH);
-        int year = c.get(Calendar.YEAR);
-        int hour = c.get(Calendar.HOUR_OF_DAY);
-        int minutes = c.get(Calendar.MINUTE);
-        mNewNotifyDate = day + "." + month + "." + year;
-        mNewNotifyTime = hour + "." + minutes;
+        long c = System.currentTimeMillis();
+
+        newNotifyEditTextDate = (EditText) findViewById(R.id.newNotifyDate);
+        SimpleDateFormat sdfDate = new SimpleDateFormat("dd MMM, yyyy", Locale.US);
+        String mNewNotifyDateVisible = sdfDate.format(c);
+        newNotifyEditTextDate.setText(mNewNotifyDateVisible);
+
+        newNotifyEditTextTime = (EditText) findViewById(R.id.newNotifyTime);
+        SimpleDateFormat sdfTime = new SimpleDateFormat("HH:mm", Locale.US);
+        String mNewNotifyTimeVisible = sdfTime.format(c);
+        newNotifyEditTextTime.setText(mNewNotifyTimeVisible);
+
+        mNewNotifyTime = c;
+
+        final ImageView buttonTakePhotoOne = (ImageView) findViewById(R.id.takePhotoOne);
 
 //Date picker
-        newNotifyEditTextDate = (EditText) findViewById(R.id.newNotifyDate);
-        final Button mPickDate = (Button) findViewById(R.id.newNotifyDateButton);
-        mPickDate.setOnClickListener(new View.OnClickListener() {
+//        final EditText mPickDate = (EditText) findViewById(R.id.newNotifyDate);
+        newNotifyEditTextDate.setOnClickListener(new View.OnClickListener() {
 
 
             @Override
             public void onClick(View view) {
                 DialogFragment newFragment = new DatePickerFragment();
                 newFragment.show(getSupportFragmentManager(), "datePicker");
-
             }
         });
 
-
 // Time picker
-        newNotifyEditTextTime = (EditText) findViewById(R.id.newNotifyTime);
-        final Button mPickTime = (Button) findViewById(R.id.newNotifyTimeButton);
-        mPickTime.setOnClickListener(new View.OnClickListener() {
+//        final EditText mPickTime = (EditText) findViewById(R.id.newNotifyTime);
+        newNotifyEditTextTime.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 DialogFragment newFragment = new TimePickerFragment();
@@ -170,14 +177,13 @@ public class NotifyNewActivity extends AppCompatActivity {
 
 //** Привязка к объектам в отображении
 
-
         newNotifyEditTextDescription = (EditText) findViewById(R.id.newNotifyCurentDescription);
 
 //Spinner for place
         final Spinner spinnerPlace = (Spinner) findViewById(newNotifyPlace);
         // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter<CharSequence> adapterPlace = ArrayAdapter.createFromResource(this,
-                R.array.Place, android.R.layout.simple_spinner_item);
+        ArrayAdapter<String> adapterPlace = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, arrayPlace);
 // Specify the layout to use when the list of choices appears
         adapterPlace.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 // Apply the adapter to the spinner
@@ -186,8 +192,8 @@ public class NotifyNewActivity extends AppCompatActivity {
 //Spinner for department
         final Spinner spinnerDepartment = (Spinner) findViewById(newNotifyDepartment);
         // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter<CharSequence> adapterDepartment = ArrayAdapter.createFromResource(this,
-                R.array.Department, android.R.layout.simple_spinner_item);
+        ArrayAdapter<String> adapterDepartment = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, arrayDepartment);
 // Specify the layout to use when the list of choices appears
         adapterDepartment.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 // Apply the adapter to the spinner
@@ -204,6 +210,7 @@ public class NotifyNewActivity extends AppCompatActivity {
         spinnerAccidentType.setAdapter(adapterAccidentType);
 
 
+
 //Save button - listener
         final Button buttonSaveNotify = (Button) findViewById(R.id.saveNotifyButton);
         buttonSaveNotify.setOnClickListener(new View.OnClickListener() {
@@ -212,15 +219,25 @@ public class NotifyNewActivity extends AppCompatActivity {
                 //Save info to database new Notify
 
 //** Получение текущей даты и времени из системы
+                mNewNotifyCurrentTime = System.currentTimeMillis();
 
-                DateFormat df1 = new SimpleDateFormat("d MMM yyyy");
-                DateFormat df2 = new SimpleDateFormat("HH:mm");
-//                mNewNotifyCurrentDate = df1.format(Calendar.getInstance().getTime());
-                mNewNotifyCurrentTime = df2.format(Calendar.getInstance().getTime());
 
 //**Получение данных из заполненных полей
-                mNewNotifyDate = newNotifyEditTextDate.getText().toString();
-                mNewNotifyTime = newNotifyEditTextTime.getText().toString();
+
+                String toParse = newNotifyEditTextDate.getText().toString() + " " + newNotifyEditTextTime.getText().toString();
+                SimpleDateFormat formatter = new SimpleDateFormat("dd MM, yyyy HH:mm", Locale.US);
+
+                Date date = null;
+                try {
+                    date = formatter.parse(toParse);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
+                if (date != null) {
+                    mNewNotifyTime = date.getTime();
+                }
+
                 mNewNotifyAccidentType = spinnerAccidentType.getSelectedItem().toString();
                 mNewNotifyPlace = spinnerPlace.getSelectedItem().toString();
                 mNewNotifyDepartment = spinnerDepartment.getSelectedItem().toString();
@@ -228,7 +245,7 @@ public class NotifyNewActivity extends AppCompatActivity {
 
 //send to Firebase database
                 NotifyHSEQItem notifyHSEQItem = new NotifyHSEQItem(
-                        uid, mNewNotifyCurrentTime, mNewNotifyDate, mNewNotifyTime, mNewNotifyAccidentType,
+                        uid, mNewNotifyCurrentTime, mNewNotifyTime, mNewNotifyAccidentType,
                         mNewNotifyPlace, mNewNotifyDepartment, mNewNotifyDescription, mPhotoPath, mPhotoNameFile,
                         mNotifyStatus, mNamePerson, mEmailPerson, mPhonePerson, mDepartmentPerson);
                 myRef.push().setValue(notifyHSEQItem);
@@ -250,8 +267,8 @@ public class NotifyNewActivity extends AppCompatActivity {
                         (new OnProgressListener<UploadTask.TaskSnapshot>() {
                             @Override
                             public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                                double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
-                                Toast.makeText(getApplicationContext(), "Upload is " + progress + "% done", Toast.LENGTH_SHORT).show(); //TODO good view of uploading file
+//                                double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+//                                Toast.makeText(getApplicationContext(), "Upload is " + progress + "% done", Toast.LENGTH_SHORT).show();
                             }
                         }).addOnPausedListener(new OnPausedListener<UploadTask.TaskSnapshot>() {
                     @Override
@@ -267,33 +284,11 @@ public class NotifyNewActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                         // Handle successful uploads on complete
+                        Toast.makeText(getApplicationContext(), "Upload photo is done", Toast.LENGTH_SHORT).show();
 //                        Uri downloadUrl = taskSnapshot.getMetadata().getDownloadUrl();
                     }
                 });
-
-
-//                uploadTask = storageRef.putFile(file);
-//
-//// Register observers to listen for when the download is done or if it fails
-//                uploadTask.addOnFailureListener(new OnFailureListener() {
-//                    @Override
-//                    public void onFailure(@NonNull Exception exception) {
-//                        // Handle unsuccessful uploads
-//                    }
-//                }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-//                    @Override
-//                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-//                        Toast.makeText(getApplicationContext(), "Image uploaded to Server", Toast.LENGTH_SHORT ).show();
-//                        // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
-// //                       Uri downloadUrl = taskSnapshot.getDownloadUrl();
-//                    }
-//                });
-
-
-                // going back to MainActivity
-                Intent activityChangeIntent = new Intent(NotifyNewActivity.this, MainActivity.class);
-                // currentContext.startActivity(activityChangeIntent);
-                NotifyNewActivity.this.startActivity(activityChangeIntent);
+                finish();
             }
         });
 
@@ -303,101 +298,92 @@ public class NotifyNewActivity extends AppCompatActivity {
             public void onClick(View v) {
                 //Send info about new Notify
 
-                //** Получение текущей даты и времени из системы
+                //Получение текущей даты и времени из системы
+                mNewNotifyCurrentTime = System.currentTimeMillis();
 
-                DateFormat df1 = new SimpleDateFormat("d MMM yyyy");
-                DateFormat df2 = new SimpleDateFormat("HH:mm");
-//                mNewNotifyCurrentDate = df1.format(Calendar.getInstance().getTime());
-                mNewNotifyCurrentTime = df2.format(Calendar.getInstance().getTime());
-
-//**Получение данных из заполненных полей
-                mNewNotifyDate = newNotifyEditTextDate.getText().toString();
-                mNewNotifyTime = newNotifyEditTextTime.getText().toString();
-                mNewNotifyPlace = spinnerPlace.getSelectedItem().toString();
-                mNewNotifyDepartment = spinnerDepartment.getSelectedItem().toString();
-                mNewNotifyAccidentType = spinnerAccidentType.getSelectedItem().toString();
-                mNewNotifyDescription = newNotifyEditTextDescription.getText().toString();
-
-                mNotifyFullText = "Notify:";
-                mNotifyFullText += "\nRegister: Date: " + mNewNotifyCurrentTime;
-                mNotifyFullText += "\nDate: " + mNewNotifyDate;
-                mNotifyFullText += "\nTime: " + mNewNotifyTime;
-                mNotifyFullText += "\nPlace: " + mNewNotifyPlace;
-                mNotifyFullText += "\nDepartment: " + mNewNotifyDepartment;
-                mNotifyFullText += "\nAccident type: " + mNewNotifyAccidentType;
-                mNotifyFullText += "\nShort information:\n: " + mNewNotifyDescription;
-
-
-//** Посылаем письмо с информацией
-                MailSender mailSender = new MailSender("soldiez111@gmail.com", "soldar111");
-
-                Mail.MailBuilder builder = new Mail.MailBuilder();
-                Mail mail;
-
-                if (mPhotoNameFile.equals("")) {
-                    mail = builder
-                            .setSender("soldiez111@gmail.com")
-                            .addRecipient(new Recipient("soldiez@yandex.ru"))
-//                        .addRecipient(new Recipient(Recipient.TYPE.CC, recipientCC))
-                            .setSubject("Notify: " + mNewNotifyCurrentTime)
-                            .setText(mNotifyFullText)
-//                        .setHtml("<h1 style=\"color:red;\">Hello</h1>");
-                            .build();
-
-                } else {
-                    mail = builder
-                            .setSender("soldiez111@gmail.com")
-                            .addRecipient(new Recipient("soldiez@yandex.ru"))
-//                        .addRecipient(new Recipient(Recipient.TYPE.CC, recipientCC))
-                            .setSubject("Notify: " + mNewNotifyCurrentTime)
-                            .setText(mNotifyFullText)
-//                        .setHtml("<h1 style=\"color:red;\">Hello</h1>");
-                            .addAttachment(new Attachment(mPhotoPath + "/" + mPhotoNameFile, mPhotoNameFile))
-                            .build();
+                //Получение данных из заполненных полей
+                String toParse = newNotifyEditTextDate.getText().toString() + " " + newNotifyEditTextTime.getText().toString();
+                SimpleDateFormat formatter = new SimpleDateFormat("dd MM, yyyy HH:mm", Locale.US);
+                Date date = null; // You will need try/catch around this
+                try {
+                    date = formatter.parse(toParse);
+                } catch (ParseException e) {
+                    e.printStackTrace();
                 }
-                Log.d(TAG + " Send", mPhotoPath);
-                Log.d(TAG + " Send", mPhotoNameFile);
 
-                MailSender.OnMailSentListener onMailSentListener = new MailSender.OnMailSentListener() {
+                if (date != null) {
+                    mNewNotifyTime = date.getTime();
+                    mNewNotifyPlace = spinnerPlace.getSelectedItem().toString();
+                    mNewNotifyDepartment = spinnerDepartment.getSelectedItem().toString();
+                    mNewNotifyAccidentType = spinnerAccidentType.getSelectedItem().toString();
+                    mNewNotifyDescription = newNotifyEditTextDescription.getText().toString();
 
-                    @Override
-                    public void onSuccess() {
-                        // mail sent!
+                    mNotifyFullText = "Notify:";
+                    mNotifyFullText += "\nRegister: Date: " + mNewNotifyCurrentTime;
+                    mNotifyFullText += "\nTime: " + mNewNotifyTime;
+                    mNotifyFullText += "\nPlace: " + mNewNotifyPlace;
+                    mNotifyFullText += "\nDepartment: " + mNewNotifyDepartment;
+                    mNotifyFullText += "\nAccident type: " + mNewNotifyAccidentType;
+                    mNotifyFullText += "\nShort information:\n: " + mNewNotifyDescription;
+
+
+// Посылаем письмо с информацией
+                    MailSender mailSender = new MailSender("soldiez111@gmail.com", "soldar111");
+
+                    Mail.MailBuilder builder = new Mail.MailBuilder();
+                    Mail mail;
+
+                    if (mPhotoNameFile.equals("")) {
+                        mail = builder
+                                .setSender("soldiez111@gmail.com")
+                                .addRecipient(new Recipient("soldiez@yandex.ru"))
+//                        .addRecipient(new Recipient(Recipient.TYPE.CC, recipientCC))
+                                .setSubject("Notify: " + mNewNotifyCurrentTime)
+                                .setText(mNotifyFullText)
+//                        .setHtml("<h1 style=\"color:red;\">Hello</h1>");
+                                .build();
+                    } else {
+                        mail = builder
+                                .setSender("soldiez111@gmail.com")
+                                .addRecipient(new Recipient("soldiez@yandex.ru"))
+//                        .addRecipient(new Recipient(Recipient.TYPE.CC, recipientCC))
+                                .setSubject("Notify: " + mNewNotifyCurrentTime)
+                                .setText(mNotifyFullText)
+//                        .setHtml("<h1 style=\"color:red;\">Hello</h1>");
+                                .addAttachment(new Attachment(mPhotoPath + "/" + mPhotoNameFile, mPhotoNameFile))
+                                .build();
                     }
+                    Log.d(TAG + " Send", mPhotoPath);
+                    Log.d(TAG + " Send", mPhotoNameFile);
 
-                    @Override
-                    public void onError(Exception error) {
-                        // something bad happened :(
-                    }
-                };
+                    MailSender.OnMailSentListener onMailSentListener = new MailSender.OnMailSentListener() {
 
-                mailSender.sendMail(mail, onMailSentListener);
+                        @Override
+                        public void onSuccess() {
+                            // mail sent!
+                        }
 
-                // going back to MainActivity
-                Intent activityChangeIntent = new Intent(NotifyNewActivity.this, MainActivity.class);
-                // currentContext.startActivity(activityChangeIntent);
-                NotifyNewActivity.this.startActivity(activityChangeIntent);
+                        @Override
+                        public void onError(Exception error) {
+                            // something bad happened :(
+                        }
+                    };
+
+                    mailSender.sendMail(mail, onMailSentListener);
+
+                    finish();
+                }
             }
         });
 // обработка картинки фото
-        final ImageView buttonTakePhotoOne = (ImageView) findViewById(R.id.takePhotoOne);
+
         buttonTakePhotoOne.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
 
-                //** делаем фото, сохраняем и вставляем в вид
+                //** делаем фото, сохраняем
                 Intent intentPhoto = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 intentPhoto.putExtra(MediaStore.EXTRA_OUTPUT, generateFileUri(TYPE_PHOTO));
                 startActivityForResult(intentPhoto, REQUEST_CODE_PHOTO);
-                File file = new File(mPhotoPath + "/" + mPhotoNameFile);
-//TODO insert image to imageview
-                Glide.with(getApplicationContext() /* context */)
-
-                        .load(file.toString())
-                        .into(buttonTakePhotoOne);
-
-
-                //               Bitmap bitmap = (Bitmap) file;
-                //               buttonTakePhotoOne.setImageBitmap(Bitmap.file);
             }
         });
     }
@@ -409,6 +395,14 @@ public class NotifyNewActivity extends AppCompatActivity {
                 if (intentPhoto == null) {
                     Log.d(TAG, "Intent is null");
 
+                    ImageView buttonTakePhotoOne = (ImageView) findViewById(R.id.takePhotoOne);
+                    String filePath = new ImageCompression(getBaseContext()).compressImage(mPhotoPath + "/" + mPhotoNameFileCamera);
+                    mPhotoNameFile = filePath.substring(filePath.lastIndexOf("/") + 1);
+                    Log.d(TAG, "New file name:" + mPhotoNameFile);
+                    Bitmap myBitmap = BitmapFactory.decodeFile(filePath);
+                    buttonTakePhotoOne.setImageBitmap(myBitmap);
+                    File fileCamera = new File(mPhotoPath + "/" + mPhotoNameFileCamera);
+                    fileCamera.delete();
                 } else {
                     Log.d(TAG, "Photo uri: " + intentPhoto.getData());
                     Bundle bndl = intentPhoto.getExtras();
@@ -424,26 +418,23 @@ public class NotifyNewActivity extends AppCompatActivity {
             } else if (resultCode == RESULT_CANCELED) {
                 Log.d(TAG, "Canceled");
             }
-
         }
-
     }
 
     private Uri generateFileUri(int type) {
-        File file = null;
-        mPhotoNameFile = "photo_" + System.currentTimeMillis() + ".jpg";
+        File fileCamera = null;
+        mPhotoNameFileCamera = "photo_" + System.currentTimeMillis() + ".jpg";
         mPhotoPath = directory.getPath();
-        file = new File(mPhotoPath + "/" + mPhotoNameFile);
-
-        Log.d(TAG, "fileName = " + file);
-        return Uri.fromFile(file);
+        fileCamera = new File(mPhotoPath + "/" + mPhotoNameFileCamera);
+        Log.d(TAG, "fileName = " + fileCamera);
+        return Uri.fromFile(fileCamera);
     }
 
     private void createDirectory() {
-        directory = new File(
-                Environment
-                        .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-                "MyFolder");
+        directory = new File(Environment.getExternalStorageDirectory()
+                + "/Android/data/"
+                + getBaseContext().getApplicationContext().getPackageName()
+                + "/Files");
         if (!directory.exists())
             directory.mkdirs();
     }
@@ -470,6 +461,5 @@ public class NotifyNewActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
-
 
 }

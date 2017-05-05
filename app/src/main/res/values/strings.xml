@@ -4,12 +4,12 @@
     <string name="New_notify">New notify</string>
     <string name="New_notify_data">Data</string>
     <string name="New_notify_time">Time</string>
-    <string name="Curent_Data">Curent data</string>
+    <string name="Curent_Data">Curent date</string>
     <string name="Curent_Time">Curent time</string>
-    <string name="New_notify_place">Place</string>
-    <string name="New_notify_Department">Department</string>
-    <string name="New_notify_AcidentType">Accident type</string>
-    <string name="New_notify_Description">Description</string>
+    <string name="New_notify_place">Place:</string>
+    <string name="New_notify_Department">Department:</string>
+    <string name="New_notify_AcidentType">Notify type:</string>
+    <string name="New_notify_Description">Description:</string>
     <string name="Save_Notify">Save data</string>
     <string name="Send_Notify">Send data</string>
     <string name="New_notify_Description_Text">No text</string>
@@ -43,6 +43,8 @@
         <item>Near Loss</item>
         <item>LTA</item>
         <item>Near Mess</item>
+        <item>Observation</item>
+        <item>Best practice</item>
     </string-array>
     <string name="title_activity_settings">Settings</string>
 
@@ -117,13 +119,21 @@
     <string name="pref_ringtone_silent">Silent</string>
 
     <string name="pref_title_vibrate">Vibrate</string>
-    <string name="Delete_Notify">Delete Notify</string>
-    <string name="update_notify">Update Notify</string>
+    <string name="Delete_Notify">Delete</string>
+    <string name="update_notify">Update</string>
     <string name="enter_text_please">Enter text please</string>
     <string name="registered">Registered:</string>
     <string name="happened">Happened:</string>
-    <string name="edit_notify">Edit Notify</string>
-    <string name="view_notify">View Notify</string>
+    <string name="edit_notify">Edit</string>
+    <string name="view_notify">View</string>
+    <string name="signout">Sign out</string>
+    <string name="delete_image">Delete Image</string>
+    <string name="take_photo">Take photo</string>
+    <string name="photo">Photo</string>
+
+    <string name="title_activity_photo_show">PhotoShow</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
 
 
 </resources>

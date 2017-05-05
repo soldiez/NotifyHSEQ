@@ -5,9 +5,8 @@ import java.io.Serializable;
 
 public class NotifyHSEQItem implements Serializable {
     private int uid;
-    private String timeRegistration;
-    private String dateHappened;
-    private String timeHappened;
+    private Long timeRegistration;
+    private Long timeHappened;
     private String type;
     private String place;
     private String department;
@@ -25,13 +24,12 @@ public class NotifyHSEQItem implements Serializable {
     public NotifyHSEQItem() {
     }
 
-    public NotifyHSEQItem(int uid, String timeRegistration,
-                          String dateHappened, String timeHappened, String type, String place,
+    public NotifyHSEQItem(int uid, Long timeRegistration,
+                          Long timeHappened, String type, String place,
                           String department, String description, String photoPath, String photoName,
                           int status, String namePerson, String emailPerson, String phonePerson, String departmentPerson) {
         this.uid = uid;
         this.timeRegistration = timeRegistration;
-        this.dateHappened = dateHappened;
         this.timeHappened = timeHappened;
         this.type = type;
         this.place = place;
@@ -50,15 +48,11 @@ public class NotifyHSEQItem implements Serializable {
         return uid;
     }
 
-    public String getTimeRegistration() {
+    public Long getTimeRegistration() {
         return timeRegistration;
     }
 
-    public String getDateHappened() {
-        return dateHappened;
-    }
-
-    public String getTimeHappened() {
+    public Long getTimeHappened() {
         return timeHappened;
     }
 

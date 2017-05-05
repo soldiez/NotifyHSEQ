@@ -1,6 +1,8 @@
 package ua.com.hse.notifyhseq;
 
 import android.Manifest;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -12,8 +14,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.firebase.ui.storage.images.FirebaseImageLoader;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -24,6 +28,10 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class NotifyShowActivity extends AppCompatActivity {
 
@@ -38,13 +46,10 @@ public class NotifyShowActivity extends AppCompatActivity {
     FirebaseStorage firebaseStorage;
     StorageReference storageReference;
 
-
-
     int uid;
-    String mEditNotifyDate;
-    String mEditNotifyTime;
-    String mEditNotifyCurrentDate;
-    String mEditNotifyCurrentTime;
+
+    Long mEditNotifyCurrentTime;
+    Long mEditNotifyTime;
     String mEditNotifyPlace;
     String mEditNotifyDepartment;
     String mEditNotifyAccidentType;
@@ -72,6 +77,7 @@ public class NotifyShowActivity extends AppCompatActivity {
         key = intent.getExtras().getString("key");
         Log.d("MyLOG     ", key);
 
+
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         mNotifyDatabaseReference = mFirebaseDatabase.getReference().child("notifyHSEQ").child(key);
         firebaseStorage = FirebaseStorage.getInstance();
@@ -84,10 +90,8 @@ public class NotifyShowActivity extends AppCompatActivity {
                 final NotifyHSEQItem notifyHSEQItem = dataSnapshot.getValue(NotifyHSEQItem.class);
 
 
-
                 uid = notifyHSEQItem.getUid();
                 mEditNotifyCurrentTime = notifyHSEQItem.getTimeRegistration();
-                mEditNotifyDate = notifyHSEQItem.getDateHappened();
                 mEditNotifyTime = notifyHSEQItem.getTimeHappened();
                 mEditNotifyAccidentType = notifyHSEQItem.getType();
                 mEditNotifyPlace = notifyHSEQItem.getPlace();
@@ -104,10 +108,14 @@ public class NotifyShowActivity extends AppCompatActivity {
                 // do your stuff here with value
 
                 TextView notifyDateTimeRegistered = (TextView) findViewById(R.id.NotifyDateTimeRegistered);
-                notifyDateTimeRegistered.setText(mEditNotifyCurrentDate + " " + mEditNotifyCurrentTime);
+                SimpleDateFormat sdf = new SimpleDateFormat("dd MMM, yyyy   HH:mm", Locale.US);
+                Date resultdate = new Date(mEditNotifyCurrentTime);
+                notifyDateTimeRegistered.setText(sdf.format(resultdate));
 
                 TextView notifyDateTimeHappened = (TextView) findViewById(R.id.NotifyDateTimeHappened);
-                notifyDateTimeHappened.setText(mEditNotifyDate + " " + mEditNotifyTime);
+                SimpleDateFormat sdf1 = new SimpleDateFormat("dd MMM, yyyy   HH:mm", Locale.US);
+                Date resultdate1 = new Date(mEditNotifyTime);
+                notifyDateTimeHappened.setText(sdf1.format(resultdate1));
 
                 TextView notifyAccidentType = (TextView) findViewById(R.id.NotifyAccidentType);
                 notifyAccidentType.setText(mEditNotifyAccidentType);
@@ -127,30 +135,27 @@ public class NotifyShowActivity extends AppCompatActivity {
 
                 if (!mNameFile.equals("")) {
                     storageReference = firebaseStorage.getReference().child("images").child(mNameFile);
-
+//TODO проверку наличия файла на сайте - выдает ошибку и показывает белый imageView
+//download image to cache and show in imageview
                     Glide.with(getApplicationContext() /* context */)
                             .using(new FirebaseImageLoader())
                             .load(storageReference)
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
                             .into(takePicture);
+                    takePicture.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 }
-
-//                File imgFile = new File(mNamePath + "/" + mNameFile);
-
-//                if (imgFile.exists() && imgFile.isFile()) {
-//                    Bitmap bitmapImage = BitmapFactory.decodeFile(mNamePath + "/" + mNameFile);
-//                    int nh = (int) (bitmapImage.getHeight() * (512.0 / bitmapImage.getWidth()));
-//                    Bitmap scaled = Bitmap.createScaledBitmap(bitmapImage, 512, nh, true);
-//                    takePicture.setImageBitmap(scaled);
-//
+// button show image in full screen (in other activity)
+                if (!mNameFile.equals("")) {
                     takePicture.setOnClickListener(new View.OnClickListener() {
-                        public void onClick(View v) {
-                            //TODO show photo to full screen
 
+                        public void onClick(View v) {
+                            Intent intent = new Intent(NotifyShowActivity.this, PhotoShow.class);
+                            intent.putExtra("path", mNamePath);
+                            intent.putExtra("nameFile", mNameFile);
+                            startActivity(intent);
                         }
                     });
-
-
-
+                }
 //update button - listener
                 final Button buttonUpdateNotify = (Button) findViewById(R.id.editNotifyButton);
                 buttonUpdateNotify.setOnClickListener(new View.OnClickListener() {
@@ -159,6 +164,7 @@ public class NotifyShowActivity extends AppCompatActivity {
                         Intent intent = new Intent(NotifyShowActivity.this, NotifyEditActivity.class);
                         intent.putExtra("key", key);
                         startActivity(intent);
+                        finish();
                     }
                 });
 
@@ -168,36 +174,13 @@ public class NotifyShowActivity extends AppCompatActivity {
 
                     @Override
                     public void onClick(View v) {
-                        // TODO Are you sure window?
-
-
-                        mNotifyDatabaseReference.removeValue();
-
-// Delete the file
-                        storageReference.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
-                            @Override
-                            public void onSuccess(Void aVoid) {
-                                // File deleted successfully
-                            }
-                        }).addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception exception) {
-                                // Uh-oh, an error occurred!
-                            }
-                        });
-
-
-                        // going back to MainActivity
-                        Intent activityChangeIntent = new Intent(NotifyShowActivity.this, MainActivity.class);
-                        // currentContext.startActivity(activityChangeIntent);
-                        NotifyShowActivity.this.startActivity(activityChangeIntent);
+                        openDeleteDialog();
                     }
                 });
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
             }
 
         });
@@ -234,6 +217,70 @@ public class NotifyShowActivity extends AppCompatActivity {
 //        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
 //        return (networkInfo != null && networkInfo.isConnected());
 //    }
+
+
+    private void openDeleteDialog() {
+
+        AlertDialog.Builder quitDialog = new AlertDialog.Builder(
+                this);
+        quitDialog.setTitle("Delete notify: Are you sure?");
+
+        quitDialog.setPositiveButton("Sure!", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                mNotifyDatabaseReference.removeValue();
+
+// Delete the file
+                storageReference.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        // File deleted successfully
+                        Toast.makeText(getApplicationContext(), "Delete notify is done", Toast.LENGTH_SHORT).show();
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        // Uh-oh, an error occurred!
+                    }
+                });
+                finish();
+            }
+        });
+
+        quitDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+            }
+        });
+
+        quitDialog.show();
+    }
+
+//    public void showImage() {
+//        Dialog builder = new Dialog(this);
+//        builder.requestWindowFeature(Window.FEATURE_NO_TITLE);
+//        builder.getWindow().setBackgroundDrawable(
+//                new ColorDrawable(android.graphics.Color.TRANSPARENT));
+//        builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+//            @Override
+//            public void onDismiss(DialogInterface dialogInterface) {
+//                //nothing;
+//            }
+//        });
+//
+//        ImageView imageView = new ImageView(this);
+//        Glide.with(getApplicationContext() /* context */)
+//                .using(new FirebaseImageLoader())
+//                .load(firebaseStorage.getReference().child("images").child(mNameFile))
+//                .into();
+//     //   imageView.setImageURI(imageUri);
+//        builder.addContentView(imageView, new RelativeLayout.LayoutParams(
+//                ViewGroup.LayoutParams.MATCH_PARENT,
+//                ViewGroup.LayoutParams.MATCH_PARENT));
+//        builder.show();
+//    }
+
 
 
 }

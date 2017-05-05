@@ -2,6 +2,8 @@ package ua.com.hse.notifyhseq;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -43,13 +45,17 @@ import com.google.firebase.storage.StorageTask;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 
 import ua.com.hse.notifyhseq.pickers.DatePickerFragment;
 import ua.com.hse.notifyhseq.pickers.TimePickerFragment;
 
+import static com.bumptech.glide.load.engine.DiskCacheStrategy.NONE;
 import static ua.com.hse.notifyhseq.R.array.AccidentType;
-import static ua.com.hse.notifyhseq.R.id.takePhotoOne;
-import static ua.com.hse.notifyhseq.R.id.takePicture;
 
 public class NotifyEditActivity extends AppCompatActivity {
 
@@ -65,25 +71,27 @@ public class NotifyEditActivity extends AppCompatActivity {
     final String TAG = "myLogs";
     int uid;
 
-    String mEditNotifyDate;
-    String mEditNotifyTime;
-    String mEditNotifyCurrentTime;
+    Long mEditNotifyCurrentTime;
+    Long mEditNotifyTime;
     String mEditNotifyPlace;
     String mEditNotifyDepartment;
     String mEditNotifyAccidentType;
     String mEditNotifyDescription;
-    String mNotifyFullText;
+    String mPhotoNameFileCamera = "";
     int mNotifyStatus = 0;
     String mNamePerson = "Alex";
     String mEmailPerson = "soldiez@yandex.ru";
     String mPhonePerson = "0504223846";
     String mDepartmentPerson = "Deprt";
 
-    EditText editNotifyEditTextDate, editNotifyEditTextTime, editNotifyEditTextDescription;
-    // Для фото переменные
+    EditText editNotifyEditTextDescription;
+
     File directory;
 
     String mNameFile, mNamePath, mNameFileNew, mNamePathNew;
+
+    ArrayList<String> arrayDepartment = MainActivity.arrayDepartments;
+    ArrayList<String> arrayPlace = MainActivity.arrayPlaces;
 
     FirebaseDatabase mFirebaseDatabase;
     DatabaseReference mNotifyDatabaseReference;
@@ -118,8 +126,6 @@ public class NotifyEditActivity extends AppCompatActivity {
         verifyStoragePermissions(this);
         //Создание директории (если ее нет)
         createDirectory();
-        // actualise database
-
 
         Intent intent = getIntent();
 
@@ -137,11 +143,9 @@ public class NotifyEditActivity extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
 
                 NotifyHSEQItem notifyHSEQItem = dataSnapshot.getValue(NotifyHSEQItem.class);
-//                Log.d("MyLOG      ", dataSnapshot.getValue(NotifyHSEQItem.class).toString());
 
                 uid = notifyHSEQItem.getUid();
                 mEditNotifyCurrentTime = notifyHSEQItem.getTimeRegistration();
-                mEditNotifyDate = notifyHSEQItem.getDateHappened();
                 mEditNotifyTime = notifyHSEQItem.getTimeHappened();
                 mEditNotifyAccidentType = notifyHSEQItem.getType();
                 mEditNotifyPlace = notifyHSEQItem.getPlace();
@@ -158,11 +162,8 @@ public class NotifyEditActivity extends AppCompatActivity {
                 mNameFileNew = mNameFile;
                 mNamePathNew = mNamePath;
 
-//TODO button delete image
-
 //Date picker
-                editNotifyEditTextDate = (EditText) findViewById(R.id.newNotifyDate);
-                final Button mPickDate = (Button) findViewById(R.id.editNotifyDateButton);
+                final EditText mPickDate = (EditText) findViewById(R.id.newNotifyDate);
                 mPickDate.setOnClickListener(new View.OnClickListener() {
 
 
@@ -174,13 +175,20 @@ public class NotifyEditActivity extends AppCompatActivity {
                 });
 
 // Time picker
-                editNotifyEditTextTime = (EditText) findViewById(R.id.newNotifyTime);
-                final Button mPickTime = (Button) findViewById(R.id.editNotifyTimeButton);
+                final EditText mPickTime = (EditText) findViewById(R.id.newNotifyTime);
                 mPickTime.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         DialogFragment newFragment = new TimePickerFragment();
                         newFragment.show(getSupportFragmentManager(), "timePicker");
+                    }
+                });
+// Delete button
+                Button mDeleteImage = (Button) findViewById(R.id.deleteImageButton);
+                mDeleteImage.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        openDeleteDialog();
                     }
                 });
 
@@ -190,76 +198,67 @@ public class NotifyEditActivity extends AppCompatActivity {
 
 //Spinner for place
                 final Spinner spinnerPlace = (Spinner) findViewById(R.id.editNotifyPlace);
-                // Create an ArrayAdapter using the string array and a default spinner layout
-                ArrayAdapter<CharSequence> adapterPlace = ArrayAdapter.createFromResource(getBaseContext(),
-                        R.array.Place, android.R.layout.simple_spinner_item);
-// Specify the layout to use when the list of choices appears
+                ArrayAdapter<String> adapterPlace = new ArrayAdapter<>(getBaseContext(),
+                        android.R.layout.simple_spinner_item, arrayPlace);
                 adapterPlace.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-
-// Apply the adapter to the spinner
                 spinnerPlace.setAdapter(adapterPlace);
 
 //Spinner for department
                 final Spinner spinnerDepartment = (Spinner) findViewById(R.id.editNotifyDepartment);
-                // Create an ArrayAdapter using the string array and a default spinner layout
-                ArrayAdapter<CharSequence> adapterDepartment = ArrayAdapter.createFromResource(getBaseContext(),
-                        R.array.Department, android.R.layout.simple_spinner_item);
-// Specify the layout to use when the list of choices appears
+                ArrayAdapter<String> adapterDepartment = new ArrayAdapter<>(getBaseContext(),
+                        android.R.layout.simple_spinner_item, arrayDepartment);
                 adapterDepartment.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-// Apply the adapter to the spinner
                 spinnerDepartment.setAdapter(adapterDepartment);
 
 //Spinner for Accident type
                 final Spinner spinnerAccidentType = (Spinner) findViewById(R.id.editNotifyAccidentType);
-                // Create an ArrayAdapter using the string array and a default spinner layout
                 ArrayAdapter<CharSequence> adapterAccidentType = ArrayAdapter.createFromResource(getBaseContext(),
                         AccidentType, android.R.layout.simple_spinner_item);
-// Specify the layout to use when the list of choices appears
                 adapterAccidentType.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-// Apply the adapter to the spinner
                 spinnerAccidentType.setAdapter(adapterAccidentType);
 
 
-                editNotifyEditTextDate.setText(mEditNotifyDate);
-                editNotifyEditTextTime.setText(mEditNotifyTime);
+                SimpleDateFormat sdfDate = new SimpleDateFormat("dd MM, yyyy", Locale.US);
+                Date resultDate = new Date(mEditNotifyTime);
+                mPickDate.setText(sdfDate.format(resultDate));
+
+                SimpleDateFormat sdfTime = new SimpleDateFormat("HH:mm", Locale.US);
+                Date resultTime = new Date(mEditNotifyTime);
+                mPickTime.setText(sdfTime.format(resultTime));
+
                 spinnerAccidentType.setSelection(getIndex(spinnerAccidentType, mEditNotifyAccidentType));
                 spinnerPlace.setSelection(getIndex(spinnerPlace, mEditNotifyPlace));
                 spinnerDepartment.setSelection(getIndex(spinnerDepartment, mEditNotifyDepartment));
                 editNotifyEditTextDescription.setText(mEditNotifyDescription);
 
-
+//TODO проверку наличия фото в базе (где в файле пока не понятно) - выдает ошибку при отсутствии файла на сайте, и показывает белый imageView
 // обработка картинки фото
                 final ImageView buttonTakePhotoOne = (ImageView) findViewById(R.id.takePhotoOne);
 
                 if (!mNameFile.equals("")) {
                     storageReference = firebaseStorage.getReference().child("images").child(mNameFile);
 
-                    Glide.with(getApplicationContext() /* context */)
+                    // Got the download URL for 'users/me/profile.png'
+
+                    Glide.with(getApplicationContext())
                             .using(new FirebaseImageLoader())
                             .load(storageReference)
+                            .diskCacheStrategy(NONE)
+                            .skipMemoryCache(true)
                             .into(buttonTakePhotoOne);
+                    buttonTakePhotoOne.setScaleType(ImageView.ScaleType.CENTER_CROP);
+
                 }
-
-
-//                File imgFile = new File(mNamePath + "/" + mNameFile);
-
 
                     buttonTakePhotoOne.setOnClickListener(new View.OnClickListener() {
 
-
                         public void onClick(View v) {
-
-//** делаем фото, сохраняем и вставляем в вид
+//** делаем фото, сохраняем
                             Intent intentPhoto = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                             intentPhoto.putExtra(MediaStore.EXTRA_OUTPUT, generateFileUri(TYPE_PHOTO));
                             startActivityForResult(intentPhoto, REQUEST_CODE_PHOTO);
-//TODO insert image to viewimage
-
                         }
                     });
-
-
 
 //update button - listener
                 final Button buttonUpdateNotify = (Button) findViewById(R.id.updateNotifyButton);
@@ -267,97 +266,104 @@ public class NotifyEditActivity extends AppCompatActivity {
                     public void onClick(View v) {
 
 //**Получение данных из заполненных полей
-                        mEditNotifyDate = editNotifyEditTextDate.getText().toString();
-                        mEditNotifyTime = editNotifyEditTextTime.getText().toString();
-                        mEditNotifyAccidentType = spinnerAccidentType.getSelectedItem().toString();
-                        mEditNotifyPlace = spinnerPlace.getSelectedItem().toString();
-                        mEditNotifyDepartment = spinnerDepartment.getSelectedItem().toString();
-                        mEditNotifyDescription = editNotifyEditTextDescription.getText().toString();
+                        String toParse = mPickDate.getText().toString() + " " + mPickTime.getText().toString();
+                        SimpleDateFormat formatter = new SimpleDateFormat("dd MM, yyyy HH:mm", Locale.US);
+                        Date date = null;
+                        try {
+                            date = formatter.parse(toParse);
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                        if (date != null) {
+                            mEditNotifyTime = date.getTime();
+                            mEditNotifyAccidentType = spinnerAccidentType.getSelectedItem().toString();
+                            mEditNotifyPlace = spinnerPlace.getSelectedItem().toString();
+                            mEditNotifyDepartment = spinnerDepartment.getSelectedItem().toString();
+                            mEditNotifyDescription = editNotifyEditTextDescription.getText().toString();
 
 
-                        //TODO update firebase function
-                        NotifyHSEQItem notifyHSEQItem = new NotifyHSEQItem(
-                                uid, mEditNotifyCurrentTime, mEditNotifyDate, mEditNotifyTime, mEditNotifyAccidentType,
-                                mEditNotifyPlace, mEditNotifyDepartment, mEditNotifyDescription, mNamePathNew, mNameFileNew,
-                                mNotifyStatus, mNamePerson, mEmailPerson, mPhonePerson, mDepartmentPerson);
+                            NotifyHSEQItem notifyHSEQItem = new NotifyHSEQItem(
+                                    uid, mEditNotifyCurrentTime, mEditNotifyTime, mEditNotifyAccidentType,
+                                    mEditNotifyPlace, mEditNotifyDepartment, mEditNotifyDescription, mNamePathNew, mNameFileNew,
+                                    mNotifyStatus, mNamePerson, mEmailPerson, mPhonePerson, mDepartmentPerson);
 
-                        mNotifyDatabaseReference.setValue(notifyHSEQItem);
+                            mNotifyDatabaseReference.setValue(notifyHSEQItem);
 
 
-//TODO upload image after cheking of changes
-                        if (!mNameFileNew.equals(mNameFile)) {
+                            if (!mNameFileNew.equals(mNameFile) && !mNameFileNew.equals("")) {
 
-                            Uri file = Uri.fromFile(new File(mNamePathNew + "/" + mNameFileNew));
+                                //delete of file
+                                deleteImage();
+                                Uri file = Uri.fromFile(new File(mNamePathNew + "/" + mNameFileNew));
 
-                            //delete ol file
-                            storageReference.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
-                                @Override
-                                public void onSuccess(Void aVoid) {
-                                    // File deleted successfully
-                                }
-                            }).addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception exception) {
-                                    // Uh-oh, an error occurred!
-                                }
-                            });
+
 // Create the file metadata
-                            StorageMetadata metadata = new StorageMetadata.Builder()
-                                    .setContentType("image/jpeg")
-                                    .build();
+                                StorageMetadata metadata = new StorageMetadata.Builder()
+                                        .setContentType("image/jpeg")
+                                        .build();
 
 // Upload file and metadata
-                            uploadTask = storageReferenceNew.child("images/" + file.getLastPathSegment()).putFile(file, metadata);
+                                uploadTask = storageReferenceNew.child("images/" + file.getLastPathSegment()).putFile(file, metadata);
 
 // Listen for state changes, errors, and completion of the upload.
-                            StorageTask<UploadTask.TaskSnapshot> taskSnapshotStorageTask = uploadTask.addOnProgressListener
-                                    (new OnProgressListener<UploadTask.TaskSnapshot>() {
-                                        @Override
-                                        public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                                            double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
-                                            Toast.makeText(getApplicationContext(), "Upload is " + progress + "% done", Toast.LENGTH_SHORT).show(); //TODO good view of uploading file
-                                        }
-                                    }).addOnPausedListener(new OnPausedListener<UploadTask.TaskSnapshot>() {
-                                @Override
-                                public void onPaused(UploadTask.TaskSnapshot taskSnapshot) {
-                                    System.out.println("Upload is paused");
-                                }
-                            }).addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception exception) {
-                                    // Handle unsuccessful uploads
-                                }
-                            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                                @Override
-                                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                    // Handle successful uploads on complete
+                                StorageTask<UploadTask.TaskSnapshot> taskSnapshotStorageTask = uploadTask.addOnProgressListener
+                                        (new OnProgressListener<UploadTask.TaskSnapshot>() {
+                                            @Override
+                                            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                                                //                                            double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                                                //                                            Toast.makeText(getApplicationContext(), "Upload is " + progress + "% done", Toast.LENGTH_SHORT).show();
+                                            }
+                                        }).addOnPausedListener(new OnPausedListener<UploadTask.TaskSnapshot>() {
+                                    @Override
+                                    public void onPaused(UploadTask.TaskSnapshot taskSnapshot) {
+                                        //                                       System.out.println("Upload is paused");
+                                    }
+                                }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception exception) {
+                                        // Handle unsuccessful uploads
+                                    }
+                                }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                    @Override
+                                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                        // Handle successful uploads on complete
+                                        Toast.makeText(getApplicationContext(), "Upload photo is done", Toast.LENGTH_SHORT).show();
 //                        Uri downloadUrl = taskSnapshot.getMetadata().getDownloadUrl();
-                                }
-                            });
-
+                                    }
+                                });
+                            }
+                            finish();
                         }
-
-                        Intent activityChangeIntent = new Intent(NotifyEditActivity.this, MainActivity.class);
-                        NotifyEditActivity.this.startActivity(activityChangeIntent);
                     }
                 });
-
             }
-
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
             }
-
         });
+    }
 
+    private void deleteImage() {
+        storageReference.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                // File deleted successfully
+                mNameFileNew = "";
+                Log.d(TAG, "Image is deleted");
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Uh-oh, an error occurred!
+                Log.d(TAG, "Image did not delete");
+            }
+        });
     }
 
     //get place for text in spinner
     private int getIndex(Spinner spinner, String myString) {
         int index = 0;
-
         for (int i = 0; i < spinner.getCount(); i++) {
             if (spinner.getItemAtPosition(i).toString().equalsIgnoreCase(myString)) {
                 index = i;
@@ -374,6 +380,15 @@ public class NotifyEditActivity extends AppCompatActivity {
                 if (intentPhoto == null) {
                     Log.d(TAG, "Intent is null");
 
+                    ImageView buttonTakePhotoOne = (ImageView) findViewById(R.id.takePhotoOne);
+                    String filePath = new ImageCompression(getBaseContext()).compressImage(mNamePathNew + "/" + mPhotoNameFileCamera);
+                    mNameFileNew = filePath.substring(filePath.lastIndexOf("/") + 1);
+                    Log.d(TAG, "New file name:" + mNameFileNew);
+                    Bitmap myBitmap = BitmapFactory.decodeFile(filePath);
+                    buttonTakePhotoOne.setImageBitmap(myBitmap);
+                    File fileCamera = new File(mNamePathNew + "/" + mPhotoNameFileCamera);
+                    fileCamera.delete();
+
                 } else {
                     Log.d(TAG, "Photo uri: " + intentPhoto.getData());
                     Bundle bndl = intentPhoto.getExtras();
@@ -389,29 +404,50 @@ public class NotifyEditActivity extends AppCompatActivity {
             } else if (resultCode == RESULT_CANCELED) {
                 Log.d(TAG, "Canceled");
             }
-
         }
-
     }
 
     private Uri generateFileUri(int type) {
-        File newFile = null;
-        mNameFileNew = "photo_" + System.currentTimeMillis() + ".jpg";
+        File newFileCamera = null;
+        mPhotoNameFileCamera = "photo_" + System.currentTimeMillis() + ".jpg";
         mNamePathNew = directory.getPath();
-        newFile = new File(mNamePathNew + "/" + mNameFileNew);
-
-        Log.d(TAG, "fileName = " + newFile);
-        return Uri.fromFile(newFile);
+        newFileCamera = new File(mNamePathNew + "/" + mPhotoNameFileCamera);
+        Log.d(TAG, "fileNameCamera = " + mPhotoNameFileCamera);
+        return Uri.fromFile(newFileCamera);
     }
 
     private void createDirectory() {
-        directory = new File(
-                Environment
-                        .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-                "MyFolder");
+        directory = new File(Environment.getExternalStorageDirectory()
+                + "/Android/data/"
+                + getBaseContext().getApplicationContext().getPackageName()
+                + "/Files");
         if (!directory.exists())
             directory.mkdirs();
     }
+
+    private void openDeleteDialog() {
+
+        AlertDialog.Builder quitDialog = new AlertDialog.Builder(this);
+        quitDialog.setTitle("Delete photo: Are you sure?");
+
+        quitDialog.setPositiveButton("Sure!", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                deleteImage();
+                final ImageView buttonTakePhotoOne = (ImageView) findViewById(R.id.takePhotoOne);
+                buttonTakePhotoOne.setImageResource(R.drawable.ic_photo_camera_black_24dp);
+            }
+        });
+
+        quitDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+            }
+        });
+        quitDialog.show();
+    }
+
+
 
     //Date picker biblioteks
     @Override
@@ -437,8 +473,5 @@ public class NotifyEditActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
-
-
-
 
 }

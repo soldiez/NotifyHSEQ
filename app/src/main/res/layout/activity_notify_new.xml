@@ -12,158 +12,201 @@
     <android.support.v4.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@color/cardview_light_background"
+            android:elevation="2dp"
             android:orientation="vertical"
-            android:paddingBottom="@dimen/activity_vertical_margin"
-            android:paddingLeft="@dimen/activity_horizontal_margin"
-            android:paddingRight="@dimen/activity_horizontal_margin"
-            android:paddingTop="@dimen/activity_vertical_margin"
-
+            android:paddingBottom="8dp"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:paddingTop="8dp"
             >
 
-            <ImageView
-                android:id="@+id/takePhotoOne"
-                android:layout_width="match_parent"
-                android:layout_height="40pt"
-                android:adjustViewBounds="true"
-                android:paddingBottom="8dp"
-                android:scaleType="centerCrop"
-                app:srcCompat="@android:drawable/ic_menu_camera" />
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
 
-            <LinearLayout
-
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingBottom="8dp">
-
-                <Button
-                    android:id="@+id/newNotifyDateButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/get_date" />
-
-                <EditText
-                    android:id="@+id/newNotifyDate"
+                <ImageView
+                    android:id="@+id/takePhotoOne"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/activity_horizontal_margin"
-                    android:gravity="start"
-                    android:hint="@string/Curent_Data"
-                    android:inputType="date" />
-
-            </LinearLayout>
-
-            <LinearLayout
-
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingBottom="8dp">
-
-                <Button
-                    android:id="@+id/newNotifyTimeButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/get_time" />
-
-                <EditText
-                    android:id="@+id/newNotifyTime"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/activity_horizontal_margin"
-                    android:gravity="start"
-                    android:hint="@string/Curent_Time" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingBottom="8dp"
-                android:paddingLeft="8dp"
-                android:paddingTop="16dp">
+                    android:layout_height="32pt"
+                    android:layout_centerVertical="true"
+                    android:layout_marginBottom="8dp"
+                    android:adjustViewBounds="true"
+                    android:contentDescription="@string/photo"
+                    android:paddingBottom="8dp"
+                    android:scaleType="fitCenter"
+                    app:srcCompat="@drawable/ic_photo_camera_black_24dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/New_notify_place" />
+                    android:layout_centerVertical="true"
+                    android:background="@color/tw__composer_white"
+                    android:text="@string/take_photo" />
+            </RelativeLayout>
 
-                <Spinner
-                    android:id="@+id/newNotifyPlace"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-
-            </LinearLayout>
-
-            <LinearLayout
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:paddingBottom="8dp"
-                android:paddingLeft="8dp"
-                android:paddingTop="16dp">
+                android:paddingTop="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/New_notify_Department" />
-
-                <Spinner
-                    android:id="@+id/newNotifyDepartment"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingBottom="8dp"
-                android:paddingLeft="8dp"
-                android:paddingTop="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:paddingBottom="8dp"
+                    android:paddingTop="8dp"
                     android:text="@string/New_notify_AcidentType" />
 
                 <Spinner
                     android:id="@+id/newNotifyAccidentType"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="96dp" />
 
-            </LinearLayout>
+            </RelativeLayout>
 
-            <LinearLayout
+            <RelativeLayout
+
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
+                android:orientation="horizontal"
                 android:paddingBottom="8dp"
-                android:paddingLeft="8dp"
-                android:paddingTop="16dp">
+                android:paddingTop="8dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="16dp"
+                    android:contentDescription="@string/Curent_Data"
+                    app:srcCompat="@drawable/ic_date_range_black_24dp" />
+
+                <EditText
+                    android:id="@+id/newNotifyDate"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="96dp"
+                    android:gravity="start"
+                    android:hint="@string/Curent_Data"
+                    android:inputType="date" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingBottom="8dp"
+                android:paddingTop="8dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="16dp"
+                    android:contentDescription="@string/Curent_Time"
+                    app:srcCompat="@drawable/ic_access_time_black_24dp" />
+
+                <EditText
+                    android:id="@+id/newNotifyTime"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="96dp"
+                    android:gravity="start"
+                    android:hint="@string/Curent_Time" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingBottom="8dp"
+                android:paddingTop="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:paddingBottom="8dp"
+                    android:paddingTop="8dp"
+                    android:text="@string/New_notify_place" />
+
+                <Spinner
+                    android:id="@+id/newNotifyPlace"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="96dp" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingBottom="8dp"
+                android:paddingTop="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingBottom="8dp"
+                    android:paddingTop="8dp"
+                    android:text="@string/New_notify_Department" />
+
+                <Spinner
+                    android:id="@+id/newNotifyDepartment"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="96dp" />
+
+            </RelativeLayout>
+
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="8dp"
+                android:paddingTop="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingBottom="8dp"
+                    android:paddingTop="8dp"
                     android:text="@string/New_notify_Description" />
 
                 <EditText
                     android:id="@+id/newNotifyCurentDescription"
                     android:layout_width="match_parent"
                     android:layout_height="50pt"
+                    android:layout_marginLeft="96dp"
                     android:gravity="top"
                     android:hint="@string/enter_text_please"
                     android:inputType="textMultiLine" />
+            </RelativeLayout>
 
-            </LinearLayout>
-
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginBottom="8dp"
+                android:background="@android:color/darker_gray"
+                android:paddingTop="8dp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -174,14 +217,13 @@
                     android:id="@+id/saveNotifyButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
+                    android:layout_marginRight="8dp"
                     android:text="@string/Save_Notify" />
 
                 <Button
                     android:id="@+id/sendNotifyButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:text="@string/Send_Notify" />
 
             </LinearLayout>
