@@ -3,6 +3,7 @@ package ua.com.hse.notifyhseq;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -41,6 +42,7 @@ import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
 
@@ -58,6 +60,7 @@ import static ua.com.hse.notifyhseq.R.id.newNotifyPlace;
 
 
 public class NotifyNewActivity extends AppCompatActivity {
+
 
     // Storage Permissions
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
@@ -83,12 +86,15 @@ public class NotifyNewActivity extends AppCompatActivity {
     String mEmailPerson = MainActivity.mUserEmail;
     String mPhonePerson = "0504223846";
     String mDepartmentPerson = "Deprt";
-    ArrayList<String> arrayDepartment = MainActivity.arrayDepartments;
-    ArrayList<String> arrayPlace = MainActivity.arrayPlaces;
+    ArrayList<String> arrayDepartment; //= MainActivity.arrayDepartments;
+    ArrayList<String> arrayPlace; // = MainActivity.arrayPlaces;
     EditText newNotifyEditTextDate, newNotifyEditTextTime;
     EditText newNotifyEditTextDescription;
     // Для фото переменные
     File directory;
+
+    SharedPreferences basePreference;
+    int int_condition = 0;
 
     String mNotifyFullText;
     // Firebase database
@@ -122,6 +128,10 @@ public class NotifyNewActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notify_new);
 
+        String stringDepartments = MainActivity.getPreferences("arrayDepartments", this);
+        String stringPlaces = MainActivity.getPreferences("arrayPlaces", this);
+        Log.d("MyTAG    ", stringDepartments);
+
         //Проверка необходимых разрешений
         verifyStoragePermissions(this);
 
@@ -139,7 +149,7 @@ public class NotifyNewActivity extends AppCompatActivity {
         long c = System.currentTimeMillis();
 
         newNotifyEditTextDate = (EditText) findViewById(R.id.newNotifyDate);
-        SimpleDateFormat sdfDate = new SimpleDateFormat("dd MMM, yyyy", Locale.US);
+        SimpleDateFormat sdfDate = new SimpleDateFormat("dd MM, yyyy", Locale.US);
         String mNewNotifyDateVisible = sdfDate.format(c);
         newNotifyEditTextDate.setText(mNewNotifyDateVisible);
 
@@ -155,8 +165,6 @@ public class NotifyNewActivity extends AppCompatActivity {
 //Date picker
 //        final EditText mPickDate = (EditText) findViewById(R.id.newNotifyDate);
         newNotifyEditTextDate.setOnClickListener(new View.OnClickListener() {
-
-
             @Override
             public void onClick(View view) {
                 DialogFragment newFragment = new DatePickerFragment();
@@ -182,6 +190,7 @@ public class NotifyNewActivity extends AppCompatActivity {
 //Spinner for place
         final Spinner spinnerPlace = (Spinner) findViewById(newNotifyPlace);
         // Create an ArrayAdapter using the string array and a default spinner layout
+        arrayPlace = new ArrayList<>(Arrays.asList(stringPlaces.split(",")));
         ArrayAdapter<String> adapterPlace = new ArrayAdapter<>(this,
                 android.R.layout.simple_spinner_item, arrayPlace);
 // Specify the layout to use when the list of choices appears
@@ -192,6 +201,7 @@ public class NotifyNewActivity extends AppCompatActivity {
 //Spinner for department
         final Spinner spinnerDepartment = (Spinner) findViewById(newNotifyDepartment);
         // Create an ArrayAdapter using the string array and a default spinner layout
+        arrayDepartment = new ArrayList<>(Arrays.asList(stringDepartments.split(",")));
         ArrayAdapter<String> adapterDepartment = new ArrayAdapter<>(this,
                 android.R.layout.simple_spinner_item, arrayDepartment);
 // Specify the layout to use when the list of choices appears
@@ -208,7 +218,6 @@ public class NotifyNewActivity extends AppCompatActivity {
         adapterAccidentType.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 // Apply the adapter to the spinner
         spinnerAccidentType.setAdapter(adapterAccidentType);
-
 
 
 //Save button - listener
@@ -250,44 +259,46 @@ public class NotifyNewActivity extends AppCompatActivity {
                         mNotifyStatus, mNamePerson, mEmailPerson, mPhonePerson, mDepartmentPerson);
                 myRef.push().setValue(notifyHSEQItem);
 
-                //send file to cloud
-                Uri file = Uri.fromFile(new File(mPhotoPath + "/" + mPhotoNameFile));
+                if (!mPhotoNameFile.equals("")) {
+                    //send file to cloud
+                    Uri file = Uri.fromFile(new File(mPhotoPath + "/" + mPhotoNameFile));
 
 
 // Create the file metadata
-                StorageMetadata metadata = new StorageMetadata.Builder()
-                        .setContentType("image/jpeg")
-                        .build();
+                    StorageMetadata metadata = new StorageMetadata.Builder()
+                            .setContentType("image/jpeg")
+                            .build();
 
 // Upload file and metadata to the path 'images/mountains.jpg'
-                uploadTask = storageReference.child("images/" + file.getLastPathSegment()).putFile(file, metadata);
+                    uploadTask = storageReference.child("images/" + file.getLastPathSegment()).putFile(file, metadata);
 
 // Listen for state changes, errors, and completion of the upload.
-                StorageTask<UploadTask.TaskSnapshot> taskSnapshotStorageTask = uploadTask.addOnProgressListener
-                        (new OnProgressListener<UploadTask.TaskSnapshot>() {
-                            @Override
-                            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                    StorageTask<UploadTask.TaskSnapshot> taskSnapshotStorageTask = uploadTask.addOnProgressListener
+                            (new OnProgressListener<UploadTask.TaskSnapshot>() {
+                                @Override
+                                public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
 //                                double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
 //                                Toast.makeText(getApplicationContext(), "Upload is " + progress + "% done", Toast.LENGTH_SHORT).show();
-                            }
-                        }).addOnPausedListener(new OnPausedListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onPaused(UploadTask.TaskSnapshot taskSnapshot) {
-                        System.out.println("Upload is paused");
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception exception) {
-                        // Handle unsuccessful uploads
-                    }
-                }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        // Handle successful uploads on complete
-                        Toast.makeText(getApplicationContext(), "Upload photo is done", Toast.LENGTH_SHORT).show();
+                                }
+                            }).addOnPausedListener(new OnPausedListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onPaused(UploadTask.TaskSnapshot taskSnapshot) {
+                            System.out.println("Upload is paused");
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception exception) {
+                            // Handle unsuccessful uploads
+                        }
+                    }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                            // Handle successful uploads on complete
+                            Toast.makeText(getApplicationContext(), "Upload photo is done", Toast.LENGTH_SHORT).show();
 //                        Uri downloadUrl = taskSnapshot.getMetadata().getDownloadUrl();
-                    }
-                });
+                        }
+                    });
+                }
                 finish();
             }
         });
@@ -386,7 +397,15 @@ public class NotifyNewActivity extends AppCompatActivity {
                 startActivityForResult(intentPhoto, REQUEST_CODE_PHOTO);
             }
         });
+
+        // check intent to photo request
+        String resultIntent = getIntent().getAction();
+        Log.d("MyLOG", resultIntent);
+        if (resultIntent.equals("photoButton")) {
+            buttonTakePhotoOne.performClick();
+        }
     }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intentPhoto) {
@@ -461,5 +480,6 @@ public class NotifyNewActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
 
 }

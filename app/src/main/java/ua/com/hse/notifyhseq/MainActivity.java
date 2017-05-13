@@ -1,7 +1,10 @@
 package ua.com.hse.notifyhseq;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -41,10 +44,14 @@ public class MainActivity extends AppCompatActivity {
     FirebaseRecyclerAdapter mAdapter;
     FirebaseDatabase mFirebaseDatabase;
     DatabaseReference mNotifyDatabaseReference, mDepartmentDatabaseReference, mPlaceDatabaseReference;
+
     FirebaseAuth mFirebaseAuth;
     FirebaseAuth.AuthStateListener mAuthStateListener;
     String ANONYMOUS = "anonymous";
     int RC_SIGN_IN = 1;
+
+//    public static final String APP_PREFERENCES = "mysettings";
+//    SharedPreferences appPreferences;
 //TODO widget for initial start (photo, type, other)
 
 //TODO analytic part on main screen
@@ -54,6 +61,18 @@ public class MainActivity extends AppCompatActivity {
 //TODO ALL notify/myNotify/myResponsibleNotify tabs
 
 //TODO work with status Notify (notification etc.)
+
+    public static void setPreferences(String key, String value, Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(key, value);
+        editor.commit();
+    }
+
+    public static String getPreferences(String key, Context context) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        return preferences.getString(key, null);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,12 +103,19 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
 
+//        appPreferences = this.getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
+
+
+
         mDepartmentDatabaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 String stringDepartments = snapshot.getValue(String.class);
-                arrayDepartments = new ArrayList<>(Arrays.asList(stringDepartments.split(",")));
+                //       arrayDepartments = new ArrayList<>(Arrays.asList(stringDepartments.split(",")));
                 //                    Log.d("MySTRING", arrayDepartments.toString());
+
+//                appPreferences.edit().putString("arrayDepartments", stringDepartments).apply();
+                setPreferences("arrayDepartments", stringDepartments, getBaseContext());
             }
 
             @Override
@@ -102,8 +128,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 String stringPlaces = snapshot.getValue(String.class);
-                arrayPlaces = new ArrayList<>(Arrays.asList(stringPlaces.split(",")));
+                //      arrayPlaces = new ArrayList<>(Arrays.asList(stringPlaces.split(",")));
                 //                    Log.d("MySTRING", arrayDepartments.toString());
+                //           appPreferences.edit().putString("arrayPlaces", stringPlaces).apply();
+                setPreferences("arrayPlaces", stringPlaces, getBaseContext());
             }
 
             @Override
@@ -213,7 +241,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
 
     @Override
     public void onResume() {

@@ -48,6 +48,7 @@ import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
 
@@ -90,8 +91,8 @@ public class NotifyEditActivity extends AppCompatActivity {
 
     String mNameFile, mNamePath, mNameFileNew, mNamePathNew;
 
-    ArrayList<String> arrayDepartment = MainActivity.arrayDepartments;
-    ArrayList<String> arrayPlace = MainActivity.arrayPlaces;
+    ArrayList<String> arrayDepartment; //= MainActivity.arrayDepartments;
+    ArrayList<String> arrayPlace; // = MainActivity.arrayPlaces;
 
     FirebaseDatabase mFirebaseDatabase;
     DatabaseReference mNotifyDatabaseReference;
@@ -124,6 +125,10 @@ public class NotifyEditActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notify_edit);
         verifyStoragePermissions(this);
+
+        final String stringDepartments = MainActivity.getPreferences("arrayDepartments", this);
+        final String stringPlaces = MainActivity.getPreferences("arrayPlaces", this);
+
         //Создание директории (если ее нет)
         createDirectory();
 
@@ -198,6 +203,7 @@ public class NotifyEditActivity extends AppCompatActivity {
 
 //Spinner for place
                 final Spinner spinnerPlace = (Spinner) findViewById(R.id.editNotifyPlace);
+                arrayPlace = new ArrayList<>(Arrays.asList(stringPlaces.split(",")));
                 ArrayAdapter<String> adapterPlace = new ArrayAdapter<>(getBaseContext(),
                         android.R.layout.simple_spinner_item, arrayPlace);
                 adapterPlace.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -205,6 +211,7 @@ public class NotifyEditActivity extends AppCompatActivity {
 
 //Spinner for department
                 final Spinner spinnerDepartment = (Spinner) findViewById(R.id.editNotifyDepartment);
+                arrayDepartment = new ArrayList<>(Arrays.asList(stringDepartments.split(",")));
                 ArrayAdapter<String> adapterDepartment = new ArrayAdapter<>(getBaseContext(),
                         android.R.layout.simple_spinner_item, arrayDepartment);
                 adapterDepartment.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
