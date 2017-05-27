@@ -80,10 +80,10 @@ public class NotifyEditActivity extends AppCompatActivity {
     String mEditNotifyDescription;
     String mPhotoNameFileCamera = "";
     int mNotifyStatus = 0;
-    String mNamePerson = "Alex";
-    String mEmailPerson = "soldiez@yandex.ru";
-    String mPhonePerson = "0504223846";
-    String mDepartmentPerson = "Deprt";
+    String mNamePerson;
+    String mEmailPerson;
+    String mPhonePerson;
+    String mDepartmentPerson;
 
     EditText editNotifyEditTextDescription;
 
@@ -128,6 +128,13 @@ public class NotifyEditActivity extends AppCompatActivity {
 
         final String stringDepartments = MainActivity.getPreferences("arrayDepartments", this);
         final String stringPlaces = MainActivity.getPreferences("arrayPlaces", this);
+
+        mNamePerson = MainActivity.getPreferences("m_name_person", this);
+        mEmailPerson = MainActivity.getPreferences("m_email_person", this);
+        mPhonePerson = MainActivity.getPreferences("m_phone_person", this);
+        mDepartmentPerson = MainActivity.getPreferences("m_department_person", this);
+
+//TODO сейчас не меняет данные юзера после редактирования - проверить сделать
 
         //Создание директории (если ее нет)
         createDirectory();

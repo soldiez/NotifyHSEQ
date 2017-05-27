@@ -27,7 +27,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -37,21 +36,20 @@ import static ua.com.hse.notifyhseq.R.layout.activity_main;
 public class MainActivity extends AppCompatActivity {
 
     public static String mUserName, mUserEmail;
-    public static ArrayList<String> arrayDepartments, arrayPlaces;
+
     static boolean calledAlready = false;
     //Data for activities
     RecyclerView recyclerView;
     FirebaseRecyclerAdapter mAdapter;
     FirebaseDatabase mFirebaseDatabase;
-    DatabaseReference mNotifyDatabaseReference, mDepartmentDatabaseReference, mPlaceDatabaseReference;
+    DatabaseReference mNotifyDatabaseReference, mDepartmentDatabaseReference, mPlaceDatabaseReference, mUserDatabaseReference;
 
     FirebaseAuth mFirebaseAuth;
     FirebaseAuth.AuthStateListener mAuthStateListener;
     String ANONYMOUS = "anonymous";
     int RC_SIGN_IN = 1;
 
-//    public static final String APP_PREFERENCES = "mysettings";
-//    SharedPreferences appPreferences;
+//TODO редактировать только свои
 //TODO widget for initial start (photo, type, other)
 
 //TODO analytic part on main screen
@@ -97,10 +95,17 @@ public class MainActivity extends AppCompatActivity {
         mNotifyDatabaseReference = mFirebaseDatabase.getReference().child("notifyHSEQ");
         mDepartmentDatabaseReference = mFirebaseDatabase.getReference().child("departments");
         mPlaceDatabaseReference = mFirebaseDatabase.getReference().child("places");
+        //    mUserDatabaseReference = mFirebaseDatabase.getReference().child("users");
 
         recyclerView = (RecyclerView) findViewById(R.id.main_scroll_view);
         recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        //make reverse order
+        LinearLayoutManager mLayoutManager = new LinearLayoutManager(this);
+        mLayoutManager.setReverseLayout(true);
+        mLayoutManager.setStackFromEnd(true);
+        recyclerView.setLayoutManager(mLayoutManager);
+        //  recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
 
 //        appPreferences = this.getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
@@ -111,10 +116,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 String stringDepartments = snapshot.getValue(String.class);
-                //       arrayDepartments = new ArrayList<>(Arrays.asList(stringDepartments.split(",")));
-                //                    Log.d("MySTRING", arrayDepartments.toString());
-
-//                appPreferences.edit().putString("arrayDepartments", stringDepartments).apply();
                 setPreferences("arrayDepartments", stringDepartments, getBaseContext());
             }
 
@@ -128,9 +129,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 String stringPlaces = snapshot.getValue(String.class);
-                //      arrayPlaces = new ArrayList<>(Arrays.asList(stringPlaces.split(",")));
-                //                    Log.d("MySTRING", arrayDepartments.toString());
-                //           appPreferences.edit().putString("arrayPlaces", stringPlaces).apply();
                 setPreferences("arrayPlaces", stringPlaces, getBaseContext());
             }
 
@@ -139,6 +137,7 @@ public class MainActivity extends AppCompatActivity {
             }
             // onCancelled...
         });
+
 
         //Запуск плавающей кнопки для введения извещения
 
@@ -190,6 +189,8 @@ public class MainActivity extends AppCompatActivity {
     private void OnSignedInInitialize(String userName, String userEmail) {
         mUserName = userName;
         mUserEmail = userEmail;
+        setPreferences("m_name_person", userName, this);
+        setPreferences("m_email_person", userEmail, this);
         attachDatabaseReadListener();
     }
 

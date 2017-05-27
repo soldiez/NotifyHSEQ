@@ -82,12 +82,12 @@ public class NotifyNewActivity extends AppCompatActivity {
     String mPhotoNameFile = "";
     String mPhotoNameFileCamera = "";
     int mNotifyStatus = 0;
-    String mNamePerson = MainActivity.mUserName;
-    String mEmailPerson = MainActivity.mUserEmail;
-    String mPhonePerson = "0504223846";
-    String mDepartmentPerson = "Deprt";
-    ArrayList<String> arrayDepartment; //= MainActivity.arrayDepartments;
-    ArrayList<String> arrayPlace; // = MainActivity.arrayPlaces;
+    String mNamePerson; //= MainActivity.mUserName;
+    String mEmailPerson; //= MainActivity.mUserEmail;
+    String mPhonePerson; // = "0504223846";
+    String mDepartmentPerson; // = "Deprt";
+    ArrayList<String> arrayDepartment;
+    ArrayList<String> arrayPlace;
     EditText newNotifyEditTextDate, newNotifyEditTextTime;
     EditText newNotifyEditTextDescription;
     // Для фото переменные
@@ -130,7 +130,11 @@ public class NotifyNewActivity extends AppCompatActivity {
 
         String stringDepartments = MainActivity.getPreferences("arrayDepartments", this);
         String stringPlaces = MainActivity.getPreferences("arrayPlaces", this);
-        Log.d("MyTAG    ", stringDepartments);
+        mNamePerson = MainActivity.getPreferences("m_name_person", this);
+        mEmailPerson = MainActivity.getPreferences("m_email_person", this);
+        mPhonePerson = MainActivity.getPreferences("m_phone_person", this);
+        mDepartmentPerson = MainActivity.getPreferences("m_department_person", this);
+        // Log.d("MyTAG    ", stringDepartments);
 
         //Проверка необходимых разрешений
         verifyStoragePermissions(this);
@@ -400,8 +404,8 @@ public class NotifyNewActivity extends AppCompatActivity {
 
         // check intent to photo request
         String resultIntent = getIntent().getAction();
-        Log.d("MyLOG", resultIntent);
-        if (resultIntent.equals("photoButton")) {
+        // Log.d("MyLOG", resultIntent.toString());
+        if (resultIntent != null && resultIntent.equals("photoButton")) {
             buttonTakePhotoOne.performClick();
         }
     }
