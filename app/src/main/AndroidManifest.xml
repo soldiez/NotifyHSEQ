@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="ua.com.hse.notifyhseq">
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -65,5 +66,9 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widgetproviderinfo" />
         </receiver>
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="74ba4d1272cb9e7dff24edff2bf7e96cf65eb67f"
+            tools:replace="android:value" />
     </application>
 </manifest>

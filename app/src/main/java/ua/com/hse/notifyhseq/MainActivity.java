@@ -18,6 +18,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.auth.FirebaseAuth;
@@ -30,6 +31,8 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.Arrays;
 import java.util.List;
+
+import io.fabric.sdk.android.Fabric;
 
 import static ua.com.hse.notifyhseq.R.layout.activity_main;
 
@@ -53,9 +56,7 @@ public class MainActivity extends AppCompatActivity {
 //TODO редактировать только свои
 //TODO widget for initial start (photo, type, other)
 
-//TODO analytic part on main screen
-
-//TODO preferences and data in it
+//TODO analytic part on main screen - update
 
 //TODO ALL notify/myNotify/myResponsibleNotify tabs
 
@@ -76,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Fabric.with(this, new Crashlytics());
 
         setContentView(activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -98,8 +100,6 @@ public class MainActivity extends AppCompatActivity {
         mPlaceDatabaseReference = mFirebaseDatabase.getReference().child("places");
         //    mUserDatabaseReference = mFirebaseDatabase.getReference().child("users");
 
-        final TextView totalNotifyView = (TextView) findViewById(R.id.total_notify);
-        final TextView totalValueView = (TextView) findViewById(R.id.total_value_type);
 
         recyclerView = (RecyclerView) findViewById(R.id.main_scroll_view);
         recyclerView.setHasFixedSize(true);
@@ -110,10 +110,6 @@ public class MainActivity extends AppCompatActivity {
         mLayoutManager.setStackFromEnd(true);
         recyclerView.setLayoutManager(mLayoutManager);
         //  recyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-
-//        appPreferences = this.getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
-
 
 
         mDepartmentDatabaseReference.addValueEventListener(new ValueEventListener() {
@@ -176,6 +172,8 @@ public class MainActivity extends AppCompatActivity {
                                     .createSignInIntentBuilder()
                                     .setIsSmartLockEnabled(false)
                                     .setProviders(providers)
+                                    .setTheme(R.style.LoginTheme)
+                                    .setLogo(R.mipmap.logo_icon)
                                     .build(),
                             RC_SIGN_IN
                     );
@@ -184,6 +182,33 @@ public class MainActivity extends AppCompatActivity {
         };
 
 // listener for quantity of notifyes
+
+
+
+    }
+
+    private void onSignedOutCleanUp() {
+        mUserName = ANONYMOUS;
+        mUserEmail = "";
+
+//        mAdapter.cleanup();
+    }
+
+    private void OnSignedInInitialize(String userName, String userEmail) {
+        mUserName = userName;
+        mUserEmail = userEmail;
+        setPreferences("m_name_person", userName, this);
+        setPreferences("m_email_person", userEmail, this);
+        attacheDatabaseStatListener();
+        attachDatabaseReadListener();
+    }
+
+    void attacheDatabaseStatListener() {
+
+        final TextView totalNotifyView = (TextView) findViewById(R.id.total_notify);
+        final TextView totalValueView = (TextView) findViewById(R.id.total_value_type);
+
+
         mNotifyDatabaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -198,38 +223,14 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
             }
         });
-
-
-
-
-
-
     }
 
-    private void onSignedOutCleanUp() {
-        mUserName = ANONYMOUS;
-        mUserEmail = "";
-        setPreferences("m_name_person", "John Doe", null);
-        setPreferences("m_email_person", "demo@demo.com", null);
-        setPreferences("m_phone_person", "+00000000000", null);
-        setPreferences("m_department_person", "No choice", null);
-//        mAdapter.cleanup();
-    }
 
-    private void OnSignedInInitialize(String userName, String userEmail) {
-        mUserName = userName;
-        mUserEmail = userEmail;
-        setPreferences("m_name_person", userName, this);
-        setPreferences("m_email_person", userEmail, this);
-        attachDatabaseReadListener();
-    }
-
+//TODO если не залогинен и потом отбой то видно аналитику
 
     void attachDatabaseReadListener() {
-
 
         mAdapter = new FirebaseRecyclerAdapter<NotifyHSEQItem, NotifyHSEQAdapter>(NotifyHSEQItem.class, R.layout.row_item,
                 NotifyHSEQAdapter.class, mNotifyDatabaseReference) {
@@ -258,7 +259,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void detachDatabaseReadListener() {
-
     }
 
     @Override
@@ -280,8 +280,6 @@ public class MainActivity extends AppCompatActivity {
     public void onResume() {
         super.onResume();
         mFirebaseAuth.addAuthStateListener(mAuthStateListener);
-
-
     }
 
     @Override
