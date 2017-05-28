@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
@@ -36,8 +37,8 @@ import static ua.com.hse.notifyhseq.R.layout.activity_main;
 public class MainActivity extends AppCompatActivity {
 
     public static String mUserName, mUserEmail;
-
     static boolean calledAlready = false;
+    String totalNotify, totalValue;
     //Data for activities
     RecyclerView recyclerView;
     FirebaseRecyclerAdapter mAdapter;
@@ -96,6 +97,9 @@ public class MainActivity extends AppCompatActivity {
         mDepartmentDatabaseReference = mFirebaseDatabase.getReference().child("departments");
         mPlaceDatabaseReference = mFirebaseDatabase.getReference().child("places");
         //    mUserDatabaseReference = mFirebaseDatabase.getReference().child("users");
+
+        final TextView totalNotifyView = (TextView) findViewById(R.id.total_notify);
+        final TextView totalValueView = (TextView) findViewById(R.id.total_value_type);
 
         recyclerView = (RecyclerView) findViewById(R.id.main_scroll_view);
         recyclerView.setHasFixedSize(true);
@@ -179,10 +183,39 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
+// listener for quantity of notifyes
+        mNotifyDatabaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                for (DataSnapshot snap : dataSnapshot.getChildren()) {
+                    //        Log.e(snap.getKey(),snap. + "");
+                }
+                totalNotify = String.valueOf(dataSnapshot.getChildrenCount());
+                totalNotifyView.setText(totalNotify);
+                //    totalValueView.setText(totalValue);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+
+
+
+
+
     }
 
     private void onSignedOutCleanUp() {
         mUserName = ANONYMOUS;
+        mUserEmail = "";
+        setPreferences("m_name_person", "John Doe", null);
+        setPreferences("m_email_person", "demo@demo.com", null);
+        setPreferences("m_phone_person", "+00000000000", null);
+        setPreferences("m_department_person", "No choice", null);
 //        mAdapter.cleanup();
     }
 
@@ -194,7 +227,10 @@ public class MainActivity extends AppCompatActivity {
         attachDatabaseReadListener();
     }
 
+
     void attachDatabaseReadListener() {
+
+
         mAdapter = new FirebaseRecyclerAdapter<NotifyHSEQItem, NotifyHSEQAdapter>(NotifyHSEQItem.class, R.layout.row_item,
                 NotifyHSEQAdapter.class, mNotifyDatabaseReference) {
 
@@ -214,13 +250,10 @@ public class MainActivity extends AppCompatActivity {
                         Intent intent = new Intent(view.getContext(), NotifyShowActivity.class);
                         intent.putExtra("key", key);
                         view.getContext().startActivity(intent);
-
                     }
                 });
             }
-
         };
-
         recyclerView.setAdapter(mAdapter);
     }
 
